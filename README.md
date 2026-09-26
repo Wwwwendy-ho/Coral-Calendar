@@ -45,7 +45,9 @@ A full day is about 2½ hours in nine blocks. There are no clock times, because 
 
 ### The Tide Chart (daily schedule)
 - **Choosing a day:** weekday buttons for quick picks, plus a **month calendar** for any day.
-- **Rescheduling:** **drag a lesson** to another day, by mouse or by press-and-hold on a touchscreen. If a move would put lessons out of order, the app asks first.
+- **Rescheduling:** **drag a lesson** to another day, by mouse or by press-and-hold on a touchscreen. If the day already has a lesson, choose **Shift the rest over** (that lesson and every later one move one school day) or **Swap**. If a move would put lessons out of order, the app asks first.
+- **Shift the rest over:** a button by the day's title that moves that day's lesson to the next school day and every later lesson over by one, keeping the order.
+- **Schedule changes:** every change is listed under the month calendar with its own **Undo**, plus one button to put every lesson back on its planned day.
 - **Day at a glance:** a strip shows every block sized by its minutes. Finished blocks fill in, and tapping a block jumps to it.
 - **Get ready list:** everything to print and set out for that day's games.
 - **Explanations:** tap any activity to see why it's there, what you need, how to play, and easier or harder versions.
@@ -131,11 +133,23 @@ The moving pictures show where the hand moves, but not changes in handshape. Alw
 | `index.html` | The whole app (page, styles and code) |
 | `ws/` | The 60 worksheets: `wf-1…20` (Word Family), `l1-1…20` (At the Place), `l3-1…20` (Reading Comprehension), each as a PDF and a preview picture |
 | `wsboxes.json` | Where each word sits on each worksheet, used for tap-to-highlight |
-| `asl/` | Still drawings for signs 1–99 |
-| `aslgif/` | 3-second moving pictures for signs 1–99 |
+| `asl-media.js` | The 3-second moving pictures for all 99 signs, bundled into one file |
 | `pdfjs/` | Helper file that shows PDF previews |
 
 These libraries load from cdnjs: **jsPDF** (making PDFs), **pdf-lib** (combining PDFs) and **PDF.js** (previews). The fonts are **Fredoka** and **Nunito Sans** from Google Fonts.
+
+---
+
+## Where things are saved
+
+| | Claude version | This stand-alone copy |
+|---|---|---|
+| Plan edits, moved lessons, switched games | Shared with everyone who opens the page | Saved in this browser only |
+| Logged colours, highlights, notes | Shared | Saved in this browser only |
+| Summaries written by Claude | Available and saved | Not available |
+| Done checks, timer settings, sound on/off | This device | This device |
+
+Clearing the browser's site data erases what's saved in it.
 
 ---
 
