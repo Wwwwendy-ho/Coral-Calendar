@@ -30,6 +30,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="asl-media.js" defer onload="try{render();if(hvOpen)renderHer();}catch(e){}"></script>
 <style>
 :root{
   --bg:#F7F4FC; --surface:#FFFFFF; --ink:#2A2140; --muted:#6A6184; --line:#E4DCF1;
@@ -295,7 +296,6 @@ body{background:linear-gradient(180deg,var(--calm) 0,var(--bg) 420px) no-repeat,
 .hvsteps small{font-size:.9rem;color:var(--muted)}
 .hvchoices{flex-basis:100%;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 .hvch{font:700 1.05rem var(--body);padding:12px 16px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.hvch.on{border-color:var(--coral);background:var(--sand)}
 .hvthen{font-size:1.2rem;color:var(--muted)}
 .hvthen b{color:var(--ink)}
 .hertimer{display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -309,7 +309,7 @@ body{background:linear-gradient(180deg,var(--calm) 0,var(--bg) 420px) no-repeat,
 .hvsigns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;width:100%}
 .hvsigns figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:4px;width:130px}
 .hvsigns img{width:118px;height:auto}
-.hvsigns figcaption{font-family:var(--display);font-weight:600;font-size:1.2rem;color:var(--ink)}
+.hvsigns figcaption{font-family:var(--display);font-weight:600;font-size:1.2rem;color:#2A2140}
 
 /* bank, notes, summary */
 .wtag{font:700 .66rem var(--body);letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:var(--calm);color:var(--blue);vertical-align:1px}
@@ -403,7 +403,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
 .btn:active:not(:disabled){transform:translateY(1px) scale(.97);box-shadow:none}
 .btn.primary{background:linear-gradient(180deg,color-mix(in srgb,var(--deep) 82%,white),var(--deep));box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 0 color-mix(in srgb,var(--deep) 70%,black)}
 .btn.primary:active:not(:disabled){box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
-.herlaunch{background:linear-gradient(135deg,color-mix(in srgb,var(--coral) 88%,white),var(--deep));color:#fff;border-color:transparent;box-shadow:0 2px 0 color-mix(in srgb,var(--deep) 65%,black)}
+.herlaunch{background:linear-gradient(135deg,#D14E91,#6A4BC4);color:#fff;border-color:transparent;box-shadow:0 2px 0 #4B3196}
 .herlaunch svg{animation:twinkle 3.5s ease-in-out infinite}
 .iconbtn{width:40px;height:40px;padding:0;justify-content:center;border-radius:12px;position:relative}
 .iconbtn svg{width:20px;height:20px}
@@ -414,17 +414,31 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
 .seg.has-thumb button[aria-pressed="true"]{color:var(--deep-ink)}
 .seg .thumb{position:absolute;top:0;bottom:0;left:0;background:var(--deep);border-radius:11px;z-index:0;transition:transform .38s cubic-bezier(.3,1.35,.45,1),width .38s cubic-bezier(.3,1.35,.45,1),background .3s,opacity .2s;box-shadow:0 4px 10px -4px rgba(60,40,120,.5)}
 .seg .thumb.low{background:var(--calm-ink)}
-.daystrip{display:flex;gap:3px;height:42px;border-radius:12px;overflow:hidden}
-.daystrip button{border:0;min-width:0;cursor:pointer;position:relative;font:700 .7rem var(--body);color:var(--ink);padding:0 4px;overflow:hidden;transition:filter .15s,transform .15s}
-.daystrip button span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.daystrip button:hover{filter:brightness(.96);transform:translateY(-1px)}
+.stripwrap{position:relative}
+.daystrip{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x proximity;scroll-padding-inline:12px;padding:4px 2px 10px;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--deep) 35%,transparent) transparent;-webkit-overflow-scrolling:touch;cursor:grab}
+.daystrip.dragging{cursor:grabbing;scroll-snap-type:none}
+.daystrip::-webkit-scrollbar{height:6px}.daystrip::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--deep) 35%,transparent);border-radius:6px}
+.stripwrap.scrolls:not(.atstart) .daystrip{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 44px);mask-image:linear-gradient(90deg,transparent 0,#000 44px)}
+.stripwrap.scrolls:not(.atend) .daystrip{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+.stripwrap.scrolls:not(.atstart):not(.atend) .daystrip{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 44px,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 44px,#000 calc(100% - 44px),transparent)}
+.daystrip button{flex:0 0 auto;width:calc(var(--m) * 7px);min-width:max-content;scroll-snap-align:start;border:0;border-radius:12px;cursor:pointer;position:relative;overflow:hidden;color:var(--ink);padding:9px 14px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;text-align:left;transition:filter .15s,transform .15s,box-shadow .15s}
+.daystrip button .st{font:700 .88rem var(--body);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.daystrip button .st svg{width:15px;height:15px}
+.daystrip button .sm{font:600 .74rem var(--body);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.daystrip button:hover{filter:brightness(.97);transform:translateY(-2px);box-shadow:0 6px 12px -8px rgba(60,40,120,.5)}
 .daystrip .seg-learn{background:var(--foam)}.daystrip .seg-move{background:var(--sand)}.daystrip .seg-calm{background:var(--calm)}
 .daystrip .lw{background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(62,123,214,.12) 6px 12px)}
 .daystrip .dn{background:var(--deep);color:var(--deep-ink)}
-.daystrip .dn span::before{content:"✓ "}
-.daystrip .nowblk{box-shadow:inset 0 0 0 2px var(--coral)}
-.daystrip .nowblk::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-100%);animation:sheen 2.8s ease-in-out infinite}
-@media (max-width:640px){.daystrip button span{display:none}.daystrip{height:14px}}
+.daystrip .dn .sm{color:var(--deep-ink);opacity:.8}
+.daystrip .nowblk{box-shadow:inset 0 0 0 2.5px var(--coral)}
+.daystrip .nowblk::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);transform:translateX(-100%);animation:sheen 2.8s ease-in-out infinite;pointer-events:none}
+.striparrow{position:absolute;top:calc(50% - 4px);transform:translateY(-50%);z-index:2;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--deep);display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px -4px rgba(60,40,120,.35);transition:transform .15s,opacity .2s}
+.striparrow svg{width:16px;height:16px}
+.striparrow:hover{transform:translateY(-50%) scale(1.08)}
+.striparrow.l{left:-6px}.striparrow.r{right:-6px}
+.stripwrap.scrolls .striparrow{display:flex}
+.stripwrap.atstart .striparrow.l,.stripwrap.atend .striparrow.r{opacity:0;pointer-events:none}
+@media (hover:none){.striparrow{display:none!important}}
 .check{transition:background .2s,color .2s,border-color .2s}
 .check input{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;border:2px solid currentColor;display:grid;place-items:center;margin:0;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
 .check input::after{content:"";width:8px;height:4px;border:solid var(--deep-ink);border-width:0 0 2.5px 2.5px;transform:rotate(-45deg) scale(0);margin-top:-2px;transition:transform .2s cubic-bezier(.3,1.6,.5,1)}
@@ -435,7 +449,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
 .step{scroll-margin-top:16px}
 .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,24px);background:var(--ink);color:var(--surface);padding:11px 18px;border-radius:14px;font-weight:700;font-size:.92rem;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.3,1.4,.5,1);z-index:30;max-width:min(92vw,560px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
-.toast.err{background:var(--coral);color:#fff}
+.toast.err{background:var(--coral);color:var(--deep-ink)}
 .modal:not([hidden]){animation:fadein .2s ease-out}
 .modal:not([hidden])>.sheet{animation:sheetin .32s cubic-bezier(.2,.9,.3,1.15)}
 .hvicon{animation:bob 4.5s ease-in-out infinite}
@@ -448,7 +462,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
 .tact:hover:not(:disabled){filter:brightness(1.05)}
 .tact:active:not(:disabled){transform:translateY(6px);box-shadow:0 1px 0 var(--c2),0 4px 8px -4px rgba(40,20,90,.4)}
 .tact:disabled{opacity:.35;cursor:default}
-.tact.start{--c:#3E7BD6;--c2:#285A9E}
+.tact.start{--c:#2F6BC4;--c2:#1F4E93}
 .tact.done{--c:#CC3F84;--c2:#952A5F;padding:16px 30px}
 .tact.round{--c:#FFFFFF;--c2:#CFC6E6;color:#6A4BC4;width:60px;height:60px;padding:0;border-radius:50%}
 .tact.soft{--c:#FFFFFF;--c2:#DCD4EE;color:#6A4BC4;width:44px;height:44px;padding:0;border-radius:50%;box-shadow:0 4px 0 var(--c2)}
@@ -460,7 +474,8 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
 .tact.round .rip,.tact.soft .rip,.tact.choice .rip{background:rgba(106,75,196,.18)}
 .wiggle{animation:wiggle .75s cubic-bezier(.3,1.4,.5,1)!important}
 .hvch.tact.choice{--c:#FFFFFF;--c2:#D9D0EE;color:#2A2140;font-size:1.1rem;padding:13px 18px;border-radius:16px;box-shadow:0 5px 0 var(--c2),0 10px 16px -10px rgba(40,20,90,.35);border:2px solid transparent}
-.hvch.tact.choice.on{--c:#FCE5F0;--c2:#E7A5C4;border-color:#CC3F84}
+.hvch.tact.choice{background:linear-gradient(180deg,#FFFFFF,#F6F2FC)}
+.hvch.tact.choice.on{--c:#FCE5F0;--c2:#E7A5C4;border-color:#CC3F84;background:linear-gradient(180deg,#FFF3F9,#FCE5F0);color:#2A2140}
 .hvch.tact.choice.picked{animation:popin .45s cubic-bezier(.3,1.6,.5,1)}
 .hvch.tact.choice.on::before{content:"";width:10px;height:10px;border-radius:50%;background:#CC3F84;flex:none}
 .hercard.in-next{animation:slidein .5s cubic-bezier(.2,.9,.3,1.15)}
@@ -568,7 +583,11 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
     </div>
     <p class="plan-note" id="restDay" hidden>No lesson on this day. Open Month and drag a lesson here to schedule one.</p>
     <div class="glance" id="glance"></div>
-    <div class="daystrip" id="dayStrip" aria-label="The day at a glance"></div>
+    <div class="stripwrap" id="stripWrap">
+      <button class="striparrow l" type="button" id="stripL" aria-label="Scroll the day left" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="daystrip" id="dayStrip" aria-label="The day at a glance"></div>
+      <button class="striparrow r" type="button" id="stripR" aria-label="Scroll the day right" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
     <details class="setup" id="setup"><summary>Get ready <span id="setupCount"></span></summary><ul id="setupList"></ul></details>
     <ol class="timeline" id="timeline"></ol>
     <div class="notes" id="notesBox"><label for="dayNotes" class="lbl">Notes about this day</label><textarea id="dayNotes" placeholder="How did it go? Anything she found hard, loved or refused, changes you made…"></textarea><span class="small" id="notesStatus"></span></div>
@@ -990,6 +1009,8 @@ function schoolDaysBetween(a,b){let n=0;const x=new Date(a);while(x<=b){if(isSch
 /* ---------- What each day gets ---------- */
 /* Worksheet rotation: each month uses the next unused sheets from the bank (20 of each type), so sheets only repeat
    after the whole folder has been used, or on review days (school days 21+), which intentionally reuse this month's trickiest sheet. */
+/* Sign GIFs: use the bundled copy (asl-media.js, one file) when present, else the aslgif/ folder */
+function aslSrc(ix){const m=window.ASLMEDIA;return m&&m[ix]?m[ix]:"aslgif/"+(ix+1)+".gif";}
 function wsName(id){const [t,n]=id.split("-");return t==="wf"?WF[+n-1][0]+" family sheet":t==="l1"?L1[+n-1]:L3[+n-1][0];}
 function monthIdx(d){return (d.getFullYear()-2026)*12+d.getMonth()-8;}
 function troubleSheets(d,k,prefix){const y=d.getFullYear(),m=d.getMonth(),score={};
@@ -1037,7 +1058,7 @@ document.addEventListener("click",e=>{const gb=e.target.closest&&e.target.closes
   if(t.dataset.ws)openWs(t.dataset.ws,t.dataset.title);else openSigns(t.dataset.stitle,t.dataset.signs.split(",").map(Number));});
 function openSigns(title,ids){
   document.getElementById("sgTitle").textContent=title;
-  document.getElementById("sgList").innerHTML=ids.map(ix=>{const x=ASL[ix];return `<li class="sgrow"><img class="signpic big" src="aslgif/${ix+1}.gif" alt="Drawing of the sign for ${esc(x[0])}" loading="lazy"><div><span class="nm">${ix+1}. ${esc(x[0])}</span><p class="ds">${esc(x[1])} <a href="${esc(x[2])}" target="_blank" rel="noopener">Watch the video</a></p></div></li>`;}).join("");
+  document.getElementById("sgList").innerHTML=ids.map(ix=>{const x=ASL[ix];return `<li class="sgrow"><img class="signpic big" src="${aslSrc(ix)}" alt="Drawing of the sign for ${esc(x[0])}" loading="lazy"><div><span class="nm">${ix+1}. ${esc(x[0])}</span><p class="ds">${esc(x[1])} <a href="${esc(x[2])}" target="_blank" rel="noopener">Watch the video</a></p></div></li>`;}).join("");
   document.getElementById("sgModal").hidden=false;document.getElementById("sgClose").focus();}
 function gameInfo(title,b){return GAMES[title+(b&&b.auto==="asl"?" (ASL)":"")]||GAMES[title];}
 function gameSection(g){let h="";
@@ -1225,10 +1246,22 @@ function autoPanel(b,d,pk){
     const logF=w.w===4?cardSet("math").cards.map(c=>c.big.replace(" =","")):f;
     return `<div class="auto"><span class="lbl">${esc(w.label)}${w.w<4?" · "+w.ns.join(", ")+" + ___":""}</span>${show}${logPanel("fact",logF,d)}<p class="small"><button type="button" class="wslink" data-print="math">Print the fact cards</button></p></div>`;}
   if(b.auto==="asl"){const a=aslFor(d);if(!a)return `<div class="auto"><span class="lbl">Today's signs</span><p class="small">ASL starts on ${esc(config.aslStart)}. Change the start date under Edit plan.</p></div>`;
-    return `<div class="auto"><span class="lbl">Set ${a.setNo+1} of 11 · day ${a.pos+1} of 9</span><ul class="signs">${a.win.map(ix=>{const s=ASL[ix];return `<li><img class="signpic" src="aslgif/${ix+1}.gif" alt="Drawing of the sign for ${esc(s[0])}" loading="lazy"><span class="nm">${esc(s[0])}${a.newSet.has(ix)?'<span class="tag">new</span>':""}</span><span class="ds">${esc(s[1])} <a href="${esc(s[2])}" target="_blank" rel="noopener">Watch</a></span></li>`;}).join("")}</ul>${logPanel("sign",a.win.map(ix=>ASL[ix][0]),d)}<p class="small"><button type="button" class="wslink" data-print="asl">Print today's sign cards</button></p></div>`;}
+    return `<div class="auto"><span class="lbl">Set ${a.setNo+1} of 11 · day ${a.pos+1} of 9</span><ul class="signs">${a.win.map(ix=>{const s=ASL[ix];return `<li><img class="signpic" src="${aslSrc(ix)}" alt="Drawing of the sign for ${esc(s[0])}" loading="lazy"><span class="nm">${esc(s[0])}${a.newSet.has(ix)?'<span class="tag">new</span>':""}</span><span class="ds">${esc(s[1])} <a href="${esc(s[2])}" target="_blank" rel="noopener">Watch</a></span></li>`;}).join("")}</ul>${logPanel("sign",a.win.map(ix=>ASL[ix][0]),d)}<p class="small"><button type="button" class="wslink" data-print="asl">Print today's sign cards</button></p></div>`;}
   return "";
 }
-let justDone=null;
+let justDone=null,stripFirst=true,stripDragged=false;
+/* Day strip: scroll left/right (swipe, trackpad, mouse drag or the arrows); edge fades show there is more */
+function stripEdges(){const st=document.getElementById("dayStrip"),w=document.getElementById("stripWrap");if(!st)return;
+  const more=st.scrollWidth>st.clientWidth+2;w.classList.toggle("scrolls",more);w.classList.toggle("atstart",st.scrollLeft<4);w.classList.toggle("atend",st.scrollLeft+st.clientWidth>=st.scrollWidth-4);}
+(()=>{const st=document.getElementById("dayStrip");let down=null;
+  st.addEventListener("scroll",stripEdges,{passive:true});window.addEventListener("resize",stripEdges);
+  st.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button)return;down={x:e.clientX,left:st.scrollLeft};stripDragged=false;});
+  window.addEventListener("pointermove",e=>{if(!down)return;const dx=e.clientX-down.x;if(Math.abs(dx)>5){stripDragged=true;st.classList.add("dragging");}if(stripDragged)st.scrollLeft=down.left-dx;});
+  window.addEventListener("pointerup",()=>{if(!down)return;down=null;st.classList.remove("dragging");if(stripDragged){st.dataset.userScrolled="1";setTimeout(()=>{stripDragged=false;},0);}});
+  st.addEventListener("wheel",e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY))st.dataset.userScrolled="1";},{passive:true});
+  st.addEventListener("touchstart",()=>{st.dataset.userScrolled="1";},{passive:true});
+  const step=d=>{st.dataset.userScrolled="1";st.scrollBy({left:d*st.clientWidth*.7,behavior:RM()?"auto":"smooth"});};
+  document.getElementById("stripL").onclick=()=>step(-1);document.getElementById("stripR").onclick=()=>step(1);})();
 function renderTimeline(){
   const plan=editing?draft:plans[planKey], dk=dayKey(kd), done=doneSet();
   let t=startMin();
@@ -1247,8 +1280,9 @@ function renderTimeline(){
       ${b.alt&&(b.alt.move||b.alt.quiet)?`<details class="alt"><summary>If she doesn't want to</summary>${b.alt.move?`<p><b>Move instead:</b> ${esc(b.alt.move)}</p>`:""}${b.alt.quiet?`<p><b>Quiet space:</b> ${esc(b.alt.quiet)}</p>`:""}</details>`:""}
       ${autoPanel(b,kd,k)}</div></li>`;}).join("");
   const firstOpen=list.findIndex(o=>!done.has(o.b.id));
-  document.getElementById("dayStrip").innerHTML=list.map(({b,k},i)=>`<button type="button" class="seg-${b.kind==="learn"?"learn":b.kind==="calm"?"calm":"move"}${done.has(b.id)?" dn":""}${i===firstOpen?" nowblk":""}${k==="B"?" lw":""}" style="flex:${blockMins(b)}" data-jump="${i}" title="${esc(b.title)} · ${blockMins(b)} min${done.has(b.id)?" · done":""}"><span>${esc(b.title.replace(/:.*$/,""))}</span></button>`).join("");
-  document.querySelectorAll("[data-jump]").forEach(x=>x.onclick=()=>{const t=document.getElementById("blk-"+x.dataset.jump);if(t)t.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});});
+  document.getElementById("dayStrip").innerHTML=list.map(({b,k},i)=>`<button type="button" class="seg-${b.kind==="learn"?"learn":b.kind==="calm"?"calm":"move"}${done.has(b.id)?" dn":""}${i===firstOpen?" nowblk":""}${k==="B"?" lw":""}" style="--m:${blockMins(b)}" data-jump="${i}" aria-label="${esc(b.title)}, ${blockMins(b)} minutes${done.has(b.id)?", done":i===firstOpen?", up next":""}"><span class="st">${done.has(b.id)?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':""}${esc(b.title)}</span><span class="sm">${blockMins(b)} min${k==="B"?" · Low":""}</span></button>`).join("");
+  requestAnimationFrame(()=>{const st=document.getElementById("dayStrip"),nb=st.querySelector(".nowblk");if(nb&&!st.dataset.userScrolled){st.scrollTo({left:Math.max(0,nb.offsetLeft-st.clientWidth/2+nb.offsetWidth/2),behavior:stripFirst?"auto":(RM()?"auto":"smooth")});}stripFirst=false;stripEdges();});
+  document.querySelectorAll("[data-jump]").forEach(x=>x.onclick=()=>{if(stripDragged)return;const t=document.getElementById("blk-"+x.dataset.jump);if(t)t.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});});
   justDone=null;
   el.querySelectorAll("[data-done]").forEach(c=>c.onchange=()=>{const s=doneSet();if(c.checked){s.add(c.dataset.done);justDone=c.dataset.done;}else s.delete(c.dataset.done);saveDone(s);render();});
   el.querySelectorAll("[data-slot]").forEach(x=>x.onclick=()=>{const m=mixFor(kd);m[x.dataset.slot]=x.dataset.k;saveMix(kd,m);render();});
@@ -1284,6 +1318,7 @@ function renderSets(){
   document.getElementById("setPlanTitle").textContent=`Set ${setNo+1}, day by day`+(a?` (today is day ${a.pos+1})`:"");
 }
 function render(){
+  {const st=document.getElementById("dayStrip");if(st&&render._day!==ymd(sel)){delete st.dataset.userScrolled;render._day=ymd(sel);stripFirst=true;}}
   renderLibrary();
   const key=sessionAt(ymd(sel));kd=key?parseYmd(key):null;
   renderDays();renderCal();renderMoves();
@@ -1687,7 +1722,7 @@ function renderHer(){
   card.innerHTML=`<svg class="hvicon"><use href="#${HVICON[b.auto]||HVICON[b.kind]||"i-bubbles"}"/></svg>
     <p class="hvnow">Now</p><h2 class="hvtitle">${esc(b.title)}</h2>
     <ol class="hvsteps">${parts.map((p,pi)=>`<li><span>${esc(p.title)}</span><small>${p.mins} min</small>${p.choices.length?`<div class="hvchoices">${p.choices.map(c=>`<button type="button" class="hvch tact choice${pick[b.id+":"+pi]===c?" on":""}${hvPicked===b.id+":"+pi+":"+c?" picked":""}" data-hvpick="${b.id}:${pi}" data-val="${esc(c)}" aria-pressed="${pick[b.id+":"+pi]===c}">${esc(c)}</button>`).join("")}</div>`:""}</li>`).join("")}</ol>
-    ${b.auto==="asl"&&aslFor(kd)?`<div class="hvsigns">${aslFor(kd).win.map(ix=>`<figure><img src="aslgif/${ix+1}.gif" alt="The sign for ${esc(ASL[ix][0])}"><figcaption>${esc(ASL[ix][0])}</figcaption></figure>`).join("")}</div>`:""}
+    ${b.auto==="asl"&&aslFor(kd)?`<div class="hvsigns">${aslFor(kd).win.map(ix=>`<figure><img src="${aslSrc(ix)}" alt="The sign for ${esc(ASL[ix][0])}"><figcaption>${esc(ASL[ix][0])}</figcaption></figure>`).join("")}</div>`:""}
     ${next?`<p class="hvthen">Then: <b>${esc(next.b.title)}</b></p>`:`<p class="hvthen">Then: <b>all done</b></p>`}`;
   hvPicked=null;
   document.querySelectorAll("[data-hvpick]").forEach(x=>x.onclick=()=>{const k2="tide-herpick-"+key;let m={};try{m=JSON.parse(lsGet(k2,"{}"));}catch(e){}m[x.dataset.hvpick]=x.dataset.val;lsSet(k2,JSON.stringify(m));
