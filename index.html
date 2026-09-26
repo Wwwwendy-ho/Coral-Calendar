@@ -336,6 +336,12 @@ body{background:linear-gradient(180deg,var(--calm) 0,var(--bg) 420px) no-repeat,
 .aisum .lbl{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--deep);font-weight:700}
 .aisum ul{margin:0;padding-left:18px}
 
+.dayside{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.skipbtn{font-size:.82rem;padding:6px 11px;position:relative}
+.skipbtn svg{width:16px;height:16px}
+.askacts{flex-direction:column;align-items:stretch}
+.askacts .btn{justify-content:center;text-align:center}
+
 /* timer */
 .timer{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.08);z-index:5}
 .timer .in{max-width:880px;margin:0 auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
@@ -556,7 +562,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
         <button class="btn ghost" id="calNext" type="button" aria-label="Next month">▶</button>
       </div>
       <div class="grid7" id="calGrid"></div>
-      <p class="small">Each lesson shows its reading level (L1 or L3) and addition wave (W1 to W3, or Mix). The plan starts over on the 1st of every month. To reschedule, drag a lesson to another day with the mouse, or press and hold it on a touchscreen, then drag. Hold it over ◀ or ▶ to change months. If a move would put lessons out of order, you'll be asked first.</p>
+      <p class="small">Each lesson shows its reading level (L1 or L3) and addition wave (W1 to W3, or Mix). The plan starts over on the 1st of every month. To reschedule, drag a lesson to another day with the mouse, or press and hold it on a touchscreen, then drag. Hold it over ◀ or ▶ to change months. Drop it on a day that already has a lesson to shift the rest over or swap. If a change would put lessons out of order, you'll be asked first.</p>
       <div class="moves" id="moves"></div>
     </div>
     <div class="bar">
@@ -579,9 +585,9 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
         <h3 id="dateTitle"></h3>
         <p class="plan-note" id="planNote"></p>
       </div>
-      <div class="shells" id="shells"></div>
+      <div class="dayside"><button class="btn ghost skipbtn" type="button" id="skipBtn" data-tip="Move this lesson to the next school day, and every later lesson over by one"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h11M10 5.5L14.5 10 10 14.5M17 4v12"/></svg>Shift the rest over</button><div class="shells" id="shells"></div></div>
     </div>
-    <p class="plan-note" id="restDay" hidden>No lesson on this day. Open Month and drag a lesson here to schedule one.</p>
+    <p class="plan-note" id="restDay" hidden>No lesson on this day. Open Month and drag a lesson here to schedule one. To move every later lesson too, drop it on the next lesson's day and choose “Shift the rest over”.</p>
     <div class="glance" id="glance"></div>
     <div class="stripwrap" id="stripWrap">
       <button class="striparrow l" type="button" id="stripL" aria-label="Scroll the day left" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -741,7 +747,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padd
 <div class="modal" id="askModal" hidden role="alertdialog" aria-modal="true" aria-labelledby="askMsg">
   <div class="sheet" style="max-width:480px">
     <p id="askMsg"></p>
-    <div class="actions"><button class="btn primary" type="button" id="askYes">OK</button><button class="btn" type="button" id="askNo">Cancel</button></div>
+    <div class="actions askacts" id="askActions"></div>
   </div>
 </div>
 <div class="modal" id="pvModal" hidden role="dialog" aria-modal="true" aria-labelledby="pvTitle">
@@ -983,8 +989,8 @@ function aslFirst(){const n=parseInt(config.aslFirst,10);return n>=0&&n<ASL.leng
 let plans=JSON.parse(JSON.stringify(DEFAULT_PLANS));
 let config={...DEFAULT_CONFIG};
 let planKey=lsGet("tide-plan","A")==="B"?"B":"A";
-let moves={};
-let sel=startDate(), kd=sel;
+let ops=[], dmCache=null;
+let sel=startDate(), kd=sel, firstOps=ymd(sel);
 let calMonth=new Date(sel.getFullYear(),sel.getMonth(),1);
 let editing=false, draft=null, db=null, downloads=null;
 
@@ -996,13 +1002,27 @@ function parseYmd(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");return m?ne
 function isSchool(d){const w=d.getDay();return w>=1&&w<=5;}
 function dayKey(d){return DAYS[d.getDay()-1];}
 function startDate(){const d=new Date();d.setHours(0,0,0,0);for(let i=0;i<21&&!sessionAt(ymd(d));i++)d.setDate(d.getDate()+1);return d;}
-/* ---------- Rescheduling: each lesson is named by its planned date; moves map planned date -> new date ---------- */
-function movedTo(){const m={};for(const k in moves){if(moves[k]!==k)m[moves[k]]=k;}return m;}
-function sessionAt(ds){const mt=movedTo();if(mt[ds])return mt[ds];const d=parseYmd(ds);if(d&&isSchool(d)&&!(ds in moves))return ds;return null;}
-function displayOf(k){return moves[k]||k;}
+/* ---------- Rescheduling ----------
+   Each lesson is named by its planned school day. A list of changes is applied in order:
+   {t:"move",key,to}           one lesson goes to a new date
+   {t:"shift",from,until?,n}   every lesson showing on/after `from` (and before `until`) moves n school days later
+   Ops made by one action share a group id `g`; the first carries a plain-language `label` for the changes list. */
+function nextSchool(ds,n){const d=parseYmd(ds);let k=n||1;while(k>0){d.setDate(d.getDate()+1);if(isSchool(d))k--;}return ymd(d);}
+function computeDisp(list,center){const c=parseYmd(center),a0=new Date(c),b0=new Date(c);a0.setDate(a0.getDate()-200);b0.setDate(b0.getDate()+200);
+  const disp={};for(const x=new Date(a0);x<=b0;x.setDate(x.getDate()+1)){if(isSchool(x))disp[ymd(x)]=ymd(x);}
+  for(const op of list){if(op.t==="move")disp[op.key]=op.to;
+    else if(op.t==="shift"){for(const k in disp){const v=disp[k];if(v>=op.from&&(!op.until||v<op.until))disp[k]=nextSchool(v,op.n||1);}}}
+  const at={},clash={};Object.keys(disp).sort().forEach(k=>{if(at[disp[k]])clash[disp[k]]=1;at[disp[k]]=k;});
+  for(const op of list)if(op.t==="move"&&disp[op.key]===op.to)at[op.to]=op.key;
+  return {disp,at,center,clash:Object.keys(clash).sort()};}
+function DM(hint){const h=hint||(dmCache&&dmCache.center)||ymd(new Date());if(!dmCache||Math.abs(parseYmd(dmCache.center)-parseYmd(h))>100*864e5)dmCache=computeDisp(ops,h);return dmCache;}
+function sessionAt(ds){return DM(ds).at[ds]||null;}
+function displayOf(k){return DM(k).disp[k]||k;}
 function shortDate(ds){return parseYmd(ds).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
-function inversions(m,keys){const arr=[...keys].sort(),out=new Set();
-  for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){const a=m[arr[i]]||arr[i],b=m[arr[j]]||arr[j];if(a>=b)out.add(arr[i]+"|"+arr[j]);}return out;}
+function newInversions(before,after){const keys=Object.keys(after.disp).sort(),changed=keys.filter(k=>before.disp[k]!==after.disp[k]),out=[];
+  for(const c of changed)for(const k of keys){if(k===c)continue;const [x,y]=c<k?[c,k]:[k,c];
+    const inv=a=>(a.disp[x]||x)>=(a.disp[y]||y);if(inv(after)&&!inv(before)){out.push([x,y]);if(out.length>2)return out;}}
+  return out;}
 function schoolDayOfMonth(d){if(!isSchool(d))return 0;let n=0;for(let i=1;i<=d.getDate();i++){if(isSchool(new Date(d.getFullYear(),d.getMonth(),i)))n++;}return n;}
 function schoolDaysBetween(a,b){let n=0;const x=new Date(a);while(x<=b){if(isSchool(x))n++;x.setDate(x.getDate()+1);}return n;}
 
@@ -1169,41 +1189,67 @@ function renderCal(){
   for(let i=0;i<lead;i++)h+='<span class="blank"></span>';
   for(let i=1;i<=len;i++){const d=new Date(y,m,i),ds=ymd(d),key=sessionAt(ds);
     const cls=`cd${ds===ymd(sel)?" sel":""}${ds===today?" today":""}`;
-    if(!key){h+=`<button type="button" class="${cls} empty${isSchool(d)?"":" we"}" data-d="${ds}" aria-label="${d.toDateString()}, no lesson"><span class="n">${i}</span>${isSchool(d)&&(ds in moves)?'<span class="t">moved</span>':""}</button>`;continue;}
+    if(!key){h+=`<button type="button" class="${cls} empty${isSchool(d)?"":" we"}" data-d="${ds}" aria-label="${d.toDateString()}, no lesson"><span class="n">${i}</span>${isSchool(d)?'<span class="t">free</span>':""}</button>`;continue;}
     const kdd=parseYmd(key),k=schoolDayOfMonth(kdd),r=readingFor(k,kdd),w=waveFor(k),done=(()=>{try{return JSON.parse(lsGet("tide-done-"+key,"[]")).length>0;}catch(e){return false;}})();
     const lv=r.level==="Level 1"?"L1":r.level==="Level 3"?"L3":"Rev";
     h+=`<button type="button" class="${cls} sess${key!==ds?" moved":""}" data-d="${ds}" data-key="${key}" aria-label="${d.toDateString()}, lesson ${key!==ds?"moved from "+shortDate(key):"for school day "+k}"><span class="n">${i}</span><span class="t">${lv} · ${w.short}</span>${key!==ds?`<span class="t mv">from ${kdd.getMonth()+1}/${kdd.getDate()}</span>`:""}${done?'<span class="done"></span>':""}</button>`;}
   document.getElementById("calGrid").innerHTML=h;
 }
+function opText(op){
+  if(op.label)return op.label;
+  if(op.t==="move")return `${shortDate(op.key)} lesson → ${shortDate(op.to)}`;
+  if(op.t==="shift")return `Lessons from ${shortDate(op.from)}${op.until?` up to ${shortDate(op.until)}`:" on"} moved ${op.n>1?op.n+" school days":"one school day"} later`;
+  return "";}
+function opGroups(list){const gs=[];list.forEach((op,i)=>{const g=op.g??("i"+i),last=gs[gs.length-1];if(last&&last.g===g)last.idx.push(i);else gs.push({g,idx:[i],text:opText(op)});});return gs;}
 function renderMoves(){
-  const el=document.getElementById("moves"),ks=Object.keys(moves).filter(k=>moves[k]!==k).sort();
-  if(!ks.length){el.innerHTML="";return;}
-  el.innerHTML=`<span class="lbl">Moved lessons</span>`+ks.map(k=>`<span class="mvrow">${esc(shortDate(k))} → ${esc(shortDate(moves[k]))} <button class="btn ghost" type="button" data-undo="${k}">Move back</button></span>`).join("")+`<button class="btn ghost" type="button" id="undoAll">Put every lesson back</button>`;
-  el.querySelectorAll("[data-undo]").forEach(b=>b.onclick=()=>tryMove(b.dataset.undo,b.dataset.undo));
-  document.getElementById("undoAll").onclick=async()=>{if(await askConfirm("Put every moved lesson back on its planned date?","Put them back"))saveMoves({});};
+  const el=document.getElementById("moves");
+  if(!ops.length){el.innerHTML="";return;}
+  /* a plain move that a later change moved again is hidden from the list (it stays in history, so undoing the later change puts the lesson back there) */
+  const gs=opGroups(ops).filter(g=>!g.idx.every(i=>ops[i].t==="move"&&ops.some((o,j)=>j>i&&o.t==="move"&&o.key===ops[i].key)));
+  el.innerHTML=`<span class="lbl">Schedule changes</span>`+gs.map((g,i)=>`<span class="mvrow">${esc(g.text)} <button class="btn ghost" type="button" data-undog="${i}">Undo</button></span>`).join("")+`<button class="btn ghost" type="button" id="undoAll">Put every lesson back on its planned day</button>`;
+  el.querySelectorAll("[data-undog]").forEach(b=>b.onclick=async()=>{const g=gs[+b.dataset.undog],drop=new Set(g.idx),n=ops.filter((_,j)=>!drop.has(j));
+    const after=computeDisp(n,DM().center),inv=newInversions(DM(),after),cl=after.clash.filter(d=>!DM().clash.includes(d));
+    if(cl.length&&!await askConfirm(`Undoing “${g.text}” would put two lessons on ${shortDate(cl[0])}, and only one can show. Undo the later changes first, or undo it anyway?`,"Undo anyway"))return;
+    if(!cl.length&&inv.length&&!await askConfirm(`Undoing “${g.text}” would put ${lessonSummary(inv[0][0])} after ${lessonSummary(inv[0][1])}. Undo it anyway?`,"Undo anyway"))return;
+    saveOps(n);});
+  document.getElementById("undoAll").onclick=async()=>{if(await askConfirm("Put every lesson back on its planned day?","Put them back"))saveOps([]);};
 }
-async function saveMoves(m){
-  moves=m;render();
-  if(!db){status("Moves are shown here but can't be saved without the Claude app.",true);return;}
-  try{await db.doc("schedule/moves").set({moves:JSON.stringify(m),updatedAt:Date.now()});status("Schedule saved.");}
-  catch(e){status("That move didn't save. Try again.",true);}
+async function saveOps(n){
+  ops=n;dmCache=null;render();
+  if(!db){status("Changes are shown here but can't be saved without the Claude app.",true);return;}
+  try{await db.doc("schedule/moves").set({ops:JSON.stringify(n),updatedAt:Date.now()});status("Schedule saved.");}
+  catch(e){status("That change didn't save. Try again.",true);}
 }
 function lessonSummary(k){const d=parseYmd(k),n=schoolDayOfMonth(d),r=readingFor(n,d),a=aslFor(d);return `${shortDate(k)}'s lesson (${r.comp}${a?"; ASL set "+(a.setNo+1)+", day "+(a.pos+1):""})`;}
 async function tryMove(key,target){
   const from=displayOf(key);if(from===target)return;
   const occupant=sessionAt(target);if(occupant===key)return;
-  const m={...moves};const setM=(k,d)=>{if(d===k)delete m[k];else m[k]=d;};
-  setM(key,target);if(occupant)setM(occupant,from);
-  const pts=[key,from,target].concat(occupant?[occupant]:[]).sort(),keys=new Set([...Object.keys(moves),...Object.keys(m)]);
-  for(const x=parseYmd(pts[0]);ymd(x)<=pts[pts.length-1];x.setDate(x.getDate()+1)){if(isSchool(x))keys.add(ymd(x));}
-  const before=inversions(moves,keys),after=inversions(m,keys),fresh=[...after].filter(x=>!before.has(x));
-  if(fresh.length){const [a,b]=fresh[0].split("|");
-    const msg=(occupant?`${shortDate(target)} already has a lesson, so the two lessons would swap. `:"")+`This puts ${lessonSummary(a)} after ${lessonSummary(b)}. The ASL signs, worksheets and addition waves would then happen out of their planned order.`;
-    if(!await askConfirm(msg,"Move it anyway"))return;}
-  sel=parseYmd(target);calMonth=new Date(sel.getFullYear(),sel.getMonth(),1);saveMoves(m);
+  const g=Date.now(),pl=`${shortDate(key)} lesson`,fromTxt=from===key?"":` (was on ${shortDate(from)})`;
+  let n;
+  if(occupant){
+    const later=from<target;
+    const choice=await askChoice(`${shortDate(target)} already has a lesson. What should happen to it?`,[
+      {v:"shift",label:later?`Shift the rest over (${shortDate(target)}'s lesson → ${shortDate(nextSchool(target,1))}, and so on)`:`Shift the lessons in between one day later`,primary:true},
+      {v:"swap",label:"Swap the two lessons"},{v:null,label:"Cancel"}]);
+    if(!choice)return;
+    if(choice==="shift")n=ops.concat(later
+      ?[{t:"shift",from:target,n:1,g,label:`${pl} → ${shortDate(target)}${fromTxt}; the rest shifted one school day`},{t:"move",key,to:target,g}]
+      :[{t:"shift",from:target,until:from,n:1,g,label:`${pl} → ${shortDate(target)}${fromTxt}; the lessons in between shifted one school day`},{t:"move",key,to:target,g}]);
+    else n=ops.concat([{t:"move",key,to:target,g,label:`Swapped the lessons on ${shortDate(from)} and ${shortDate(target)}`},{t:"move",key:occupant,to:from,g}]);
+  } else n=ops.concat([{t:"move",key,to:target,g,label:`${pl} → ${shortDate(target)}${fromTxt}`}]);
+  const inv=newInversions(DM(),computeDisp(n,DM().center));
+  if(inv.length){const [a,b]=inv[0];
+    if(!await askConfirm(`This puts ${lessonSummary(a)} after ${lessonSummary(b)}. The ASL signs, worksheets and addition waves would then happen out of their planned order.`,"Move it anyway"))return;}
+  sel=parseYmd(target);calMonth=new Date(sel.getFullYear(),sel.getMonth(),1);saveOps(n);
 }
-function askConfirm(msg,yes){return new Promise(res=>{const d=document.getElementById("askModal");document.getElementById("askMsg").textContent=msg;const y=document.getElementById("askYes");y.textContent=yes;d.hidden=false;y.focus();
-  const done=v=>{d.hidden=true;y.onclick=null;document.getElementById("askNo").onclick=null;res(v);};y.onclick=()=>done(true);document.getElementById("askNo").onclick=()=>done(false);});}
+async function skipDay(){if(!kd)return;const ds=ymd(sel),nx=nextSchool(ds,1);
+  if(!await askConfirm(`Move ${shortDate(ds)}'s lesson to ${shortDate(nx)}, and every later lesson one school day later too? The order stays the same.`,"Shift the rest over"))return;
+  sel=parseYmd(nx);calMonth=new Date(sel.getFullYear(),sel.getMonth(),1);
+  saveOps(ops.concat([{t:"shift",from:ds,n:1,g:Date.now(),label:`Lessons from ${shortDate(ds)} on shifted one school day later`}]));}
+function askChoice(msg,choices){return new Promise(res=>{const d=document.getElementById("askModal");document.getElementById("askMsg").textContent=msg;const act=document.getElementById("askActions");
+  act.innerHTML=choices.map((c,i)=>`<button class="btn${c.primary?" primary":c.v===null?" ghost":""}" type="button" data-ci="${i}">${esc(c.label)}</button>`).join("");d.hidden=false;
+  const btns=act.querySelectorAll("[data-ci]");btns[0].focus();btns.forEach(b=>b.onclick=()=>{d.hidden=true;res(choices[+b.dataset.ci].v);});});}
+function askConfirm(msg,yes){return askChoice(msg,[{v:true,label:yes,primary:true},{v:false,label:"Cancel"}]).then(v=>!!v);}
 
 /* drag lessons on the month calendar (mouse: drag; touch: press and hold, then drag) */
 let drag=null,suppressClick=false,flipT=null;
@@ -1325,8 +1371,8 @@ function render(){
   const rest=document.getElementById("restDay");
   if(!kd){rest.hidden=false;document.getElementById("dateTitle").textContent=sel.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
     document.getElementById("planNote").textContent="";document.getElementById("shells").textContent="";document.getElementById("glance").innerHTML="";document.getElementById("timeline").innerHTML="";
-    document.getElementById("setup").hidden=true;document.getElementById("notesBox").hidden=true;try{renderFolders();renderSummary();}catch(e){}document.getElementById("pdfBtn").disabled=true;document.getElementById("allBtn").disabled=true;document.getElementById("editBtn").disabled=true;renderSets();renderEditBar();segThumbs();return;}
-  rest.hidden=true;document.getElementById("pdfBtn").disabled=false;document.getElementById("allBtn").disabled=false;document.getElementById("editBtn").disabled=!db;
+    document.getElementById("setup").hidden=true;document.getElementById("notesBox").hidden=true;document.getElementById("skipBtn").hidden=true;try{renderFolders();renderSummary();}catch(e){}document.getElementById("pdfBtn").disabled=true;document.getElementById("allBtn").disabled=true;document.getElementById("editBtn").disabled=true;renderSets();renderEditBar();segThumbs();return;}
+  rest.hidden=true;document.getElementById("skipBtn").hidden=false;document.getElementById("pdfBtn").disabled=false;document.getElementById("allBtn").disabled=false;document.getElementById("editBtn").disabled=!db;
   renderHead();renderTimeline();renderSets();renderEditBar();try{renderSetup();}catch(e){console.error(e);}try{renderNotes();renderFolders();renderSummary();}catch(e){console.error(e);}segThumbs();}
 
 /* ---------- Static reference ---------- */
@@ -1848,6 +1894,7 @@ document.getElementById("sumWeek").onclick=()=>{sumRange="week";renderSummary();
 document.getElementById("sumMonth").onclick=()=>{sumRange="month";renderSummary();segThumbs();};
 document.getElementById("sumAI").onclick=writeAISummary;
 
+document.getElementById("skipBtn").onclick=()=>{if(editing){confirmLeave();return;}skipDay();};
 /* ---------- Boot ---------- */
 render();
 (async()=>{
@@ -1859,7 +1906,9 @@ render();
   try{db.collection("results").onSnapshot(qs=>{qs.docs.forEach(d=>{const v=d.data();if(v)results[d.id]={words:{},facts:{},signs:{},ws:{},...v};});if(!editing&&!drag){render();if(wsOpen)renderWsLayer();if(hvOpen)renderHer();}},()=>{});}catch(e){}
   try{db.collection("summaries").onSnapshot(qs=>{qs.docs.forEach(d=>{try{aiSummaries[d.id]=JSON.parse(d.data().summary);}catch(e){}});renderAISummary();},()=>{});}catch(e){}
   db.doc("schedule/swaps").onSnapshot(s=>{const d=s.data();try{swaps=d&&d.swaps?JSON.parse(d.swaps):{};}catch(e){swaps={};}if(!editing&&!drag)render();},()=>{});
-  db.doc("schedule/moves").onSnapshot(s=>{const d=s.data();try{moves=d&&d.moves?JSON.parse(d.moves):{};}catch(e){moves={};}if(!editing&&!drag)render();},()=>{});
+  db.doc("schedule/moves").onSnapshot(s=>{const d=s.data();try{ops=d&&d.ops?JSON.parse(d.ops):d&&d.moves?Object.entries(JSON.parse(d.moves)).filter(([k,v])=>k!==v).map(([key,to],i)=>({t:"move",key,to,g:"m"+i})):[];}catch(e){ops=[];}dmCache=null;
+    if(firstOps){if(ymd(sel)===firstOps){sel=startDate();calMonth=new Date(sel.getFullYear(),sel.getMonth(),1);}firstOps=null;}
+    if(!editing&&!drag)render();},()=>{});
   db.doc("config/main").onSnapshot(s=>{const d=s.data();if(d)config={...DEFAULT_CONFIG,...d};if(!editing)render();},()=>{});
 })();
 </script>
