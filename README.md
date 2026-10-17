@@ -131,9 +131,13 @@ The moving pictures show where the hand moves, but not changes in handshape. Alw
 | Path | What it is |
 |---|---|
 | `index.html` | The whole app (page, styles and code) |
-| `ws/` | The 60 worksheets: `wf-1…20` (Word Family), `l1-1…20` (At the Place), `l3-1…20` (Reading Comprehension), each as a PDF and a preview picture |
+| `ws/` | The printable worksheets, each as a PDF and a preview picture: `wf` Word Family, `l1` At the Place, `l3` Reading Comprehension, plus `cc`, `fd`, `hp`, `lh`, `pd`, `sm`, `sea`, `mats` and `ttt` sheets |
 | `wsboxes.json` | Where each word sits on each worksheet, used for tap-to-highlight |
-| `asl-media.js` | The 3-second moving pictures for all 99 signs, bundled into one file |
+| `aslgif/` | The 3-second moving pictures for all 99 signs |
+| `asl/` | A still picture for each sign |
+| `standalone.js` | Stands in for Claude's database on GitHub Pages, so changes save in this browser |
+| `tools/sync_from_artifact.py` | Rebuilds this site from a download of the Claude artifact |
+| `CHANGELOG.md` | What changed in each version |
 | `pdfjs/` | Helper file that shows PDF previews |
 
 These libraries load from cdnjs: **jsPDF** (making PDFs), **pdf-lib** (combining PDFs) and **PDF.js** (previews). The fonts are **Fredoka** and **Nunito Sans** from Google Fonts.
@@ -146,7 +150,8 @@ These libraries load from cdnjs: **jsPDF** (making PDFs), **pdf-lib** (combining
 |---|---|---|
 | Plan edits, moved lessons, switched games | Shared with everyone who opens the page | Saved in this browser only |
 | Logged colours, highlights, notes | Shared | Saved in this browser only |
-| Summaries written by Claude | Available and saved | Not available |
+| Behavior notes, check-ins, progress logs | Shared | Saved in this browser only |
+| Summaries, chart explanations and note tidying by Claude | Available | Not available |
 | Done checks, timer settings, sound on/off | This device | This device |
 
 Clearing the browser's site data erases what's saved in it.
