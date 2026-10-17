@@ -19,3 +19,6 @@ New in this version:
 Changes to the GitHub Pages copy:
 - Files now sit in folders (`aslgif/`, `asl/`, `ws/`, `pdfjs/`), matching the Claude version. The old loose files and `asl-media.js` were removed.
 - `standalone.js` replaces the old built-in offline code. Anything already saved in a browser carries over.
+
+### Privacy update (October 17, 2026)
+- The student's name is replaced with "Child" in this public copy: in the app, the README and the printed worksheets. Earlier versions in this repository's history were changed the same way.
