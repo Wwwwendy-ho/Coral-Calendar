@@ -21,4 +21,5 @@ Changes to the GitHub Pages copy:
 - `standalone.js` replaces the old built-in offline code. Anything already saved in a browser carries over.
 
 ### Privacy update (October 17, 2026)
-- The student's name is replaced with "Child" in this public copy: in the app, the README and the printed worksheets. Earlier versions in this repository's history were changed the same way.
+- The student's name is replaced with "Child" in this public copy, in the app and the README. Earlier versions in this repository's history were changed the same way.
+- The current printed worksheets (`ws/`) keep her real first name on purpose. Older worksheet versions in the history say "Child".

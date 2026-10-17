@@ -6,8 +6,9 @@ The download dir holds the artifact's published files (index.html, asl/, aslgif/
 wsboxes.json). This copies them into the repo root and adds standalone.js, which stands in for
 Claude's database so the page can save in the browser on GitHub Pages.
 
-Old=New (optional) replaces a name in the page, the worksheets and their previews (see
-tools/rename.py). Pass it on the command line so the original name is never stored in the repo.
+Old=New (optional) replaces a name in the page and data files (see tools/rename.py). The printed
+worksheets (ws/*.pdf and their previews) keep the original name on purpose. Pass it on the command
+line so the original name is never stored in the repo's text.
 """
 import pathlib
 import shutil
@@ -42,7 +43,7 @@ def main(src, swap=None):
             sys.exit("The rename must look like Old=New")
         sys.path.insert(0, str(REPO / "tools"))
         import rename
-        rename.main(REPO, old, new)
+        rename.main(REPO, old, new, pdfs=False)
     print("Synced", src, "->", REPO)
 
 

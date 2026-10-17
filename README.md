@@ -163,4 +163,4 @@ Clearing the browser's site data erases what's saved in it.
 - **Holidays:** the calendar treats every weekday as a school day. Drag lessons around holidays, or leave the day empty.
 - **Repeating sheets:** the 20 Word Family sheets get used every month, and the comprehension sheets start repeating in November. Adding more sheets pushes those repeats further out.
 - **Sounds:** they only play after the first tap, because browsers require it, and they follow the device's volume and mute switch.
-- **Privacy:** the worksheets include Child's name. Keep the site private if that matters.
+- **Privacy:** the app and this README call the student "Child". The printed worksheets (`ws/`) use her real first name, and anyone can open them. Keep the site private if that matters.

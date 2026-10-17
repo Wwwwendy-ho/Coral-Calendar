@@ -1,8 +1,10 @@
 """Replace a name throughout the site: text files, worksheet PDFs and their preview pictures.
 
-Usage: python3 tools/rename.py <folder> <OldName> <NewName>
+Usage: python3 tools/rename.py <folder> <OldName> <NewName> [--text-only]
 
 The real name is passed in on the command line and is never written into the repo.
+--text-only leaves PDFs and their previews alone (the site keeps the real name on the printed
+worksheets only; everything else uses NewName).
 - Text files (.html .js .json .md .txt .css): OldName/oldname/OLDNAME -> NewName in the same case.
 - PDFs: each occurrence is removed and NewName is written in its place, same size, colour and
   baseline, in Patrick Hand (the worksheets' handwriting font).
@@ -110,7 +112,7 @@ def fix_preview(png, pdf, rects):
     im.convert(mode).save(png, optimize=True)
 
 
-def main(folder, old, new):
+def main(folder, old, new, pdfs=True):
     root = pathlib.Path(folder)
     n_text = n_pdf = 0
     for p in sorted(root.rglob("*")):
@@ -118,7 +120,7 @@ def main(folder, old, new):
             continue
         if p.suffix in TEXT_EXT:
             n_text += fix_text(p, old, new)
-        elif p.suffix == ".pdf":
+        elif p.suffix == ".pdf" and pdfs:
             changed = fix_pdf(p, old, new)
             if changed:
                 n_pdf += 1
@@ -129,7 +131,7 @@ def main(folder, old, new):
             continue
         if p.suffix in TEXT_EXT and old.lower() in p.read_text(encoding="utf-8", errors="ignore").lower():
             left.append(str(p))
-        elif p.suffix == ".pdf" and any(old.lower() in pg.get_text().lower() for pg in pymupdf.open(p)):
+        elif p.suffix == ".pdf" and pdfs and any(old.lower() in pg.get_text().lower() for pg in pymupdf.open(p)):
             left.append(str(p))
     print(f"renamed in {n_text} text files and {n_pdf} PDFs")
     if left:
@@ -137,6 +139,7 @@ def main(folder, old, new):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    args = [a for a in sys.argv[1:] if a != "--text-only"]
+    if len(args) != 3:
         sys.exit(__doc__)
-    main(*sys.argv[1:])
+    main(*args, pdfs="--text-only" not in sys.argv)
