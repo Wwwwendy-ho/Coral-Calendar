@@ -32,6 +32,33 @@
   function drop(p) { try { localStorage.removeItem(LS + p); } catch (e) {} }
   function parent(p) { return p.slice(0, p.lastIndexOf('/')); }
 
+  // Lesson plans and schedule settings copied from the Claude version (settings-seed.js). A device
+  // takes each one when it doesn't have it, still has the copy it was last given, or had it from the
+  // earlier GitHub version; a change made on this device is kept. Her records are never included.
+  (function applySeed() {
+    var seed = window.TIDE_SEED;
+    if (!seed || !seed.docs) return;
+    var META = LS + '__seed';
+    var meta = {};
+    try { meta = JSON.parse(localStorage.getItem(META) || '{}'); } catch (e) {}
+    if (meta.version === seed.version) return;
+    var given = meta.docs || {};
+    var next = {};
+    Object.keys(seed.docs).forEach(function (p) {
+      var cur = get(p), s = seed.docs[p], key = JSON.stringify(s);
+      var untouched = cur === undefined || given[p] === undefined || JSON.stringify(cur) === given[p];
+      if (untouched) {
+        var d = JSON.parse(key);
+        if (cur && cur.consent && p === 'config/main') d.consent = cur.consent; // keep this device's record
+        try { put(p, d); } catch (e) { return; }
+        next[p] = JSON.stringify(d);
+      } else {
+        next[p] = given[p];
+      }
+    });
+    try { localStorage.setItem(META, JSON.stringify({ version: seed.version, docs: next })); } catch (e) {}
+  })();
+
   function docSnap(p) {
     var v = get(p);
     return { id: p.slice(p.lastIndexOf('/') + 1), exists: v !== undefined, data: function () { return v; } };

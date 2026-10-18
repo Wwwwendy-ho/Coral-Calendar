@@ -136,6 +136,7 @@ The moving pictures show where the hand moves, but not changes in handshape. Alw
 | `aslgif/` | The 3-second moving pictures for all 99 signs |
 | `asl/` | A still picture for each sign |
 | `standalone.js` | Stands in for Claude's database on GitHub Pages, so changes save in this browser |
+| `settings-seed.js` | Lesson plans and schedule settings (moved lessons, swapped games, times, ASL pause) copied from the Claude version. No records about her |
 | `tools/sync_from_artifact.py` | Rebuilds this site from a download of the Claude artifact |
 | `CHANGELOG.md` | What changed in each version |
 | `pdfjs/` | Helper file that shows PDF previews |

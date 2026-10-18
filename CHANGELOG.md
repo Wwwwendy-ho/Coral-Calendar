@@ -20,6 +20,10 @@ Changes to the GitHub Pages copy:
 - Files now sit in folders (`aslgif/`, `asl/`, `ws/`, `pdfjs/`), matching the Claude version. The old loose files and `asl-media.js` were removed.
 - `standalone.js` replaces the old built-in offline code. Anything already saved in a browser carries over.
 
+### Schedule settings and colors (October 18, 2026)
+- The lesson plans and schedule settings from the Claude version now come with this copy: moved and shifted lessons, swapped games, session times, the ASL pause and custom check-in feelings. Each device keeps any changes made on it. Check-ins, notes, logs and progress records are not copied.
+- This copy starts in the light (sunlit) look instead of following the device's dark mode. More → Light mode / Dark mode still switches it.
+
 ### Privacy update (October 17, 2026)
 - The student's name is replaced with "Child" in this public copy, in the app and the README. Earlier versions in this repository's history were changed the same way.
 - The current printed worksheets (`ws/`) keep her real first name on purpose. Older worksheet versions in the history say "Child".
