@@ -13,6 +13,10 @@
   if (window.claude) return;
   window.__standalone = true;
 
+  // Start in the sunlit (light) look, as the Claude version is set up. Without a saved choice the page
+  // follows the device's dark mode. Light mode / Dark mode in the More menu still switches it.
+  try { if (localStorage.getItem('tide-theme') === null) localStorage.setItem('tide-theme', 'light'); } catch (e) {}
+
   // Same prefix as the earlier GitHub version, so anything already saved on a device carries over.
   var LS = 'tide-db:';
   var docSubs = {}, colSubs = {};
