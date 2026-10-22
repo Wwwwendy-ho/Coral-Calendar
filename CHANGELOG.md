@@ -20,10 +20,6 @@ Changes to the GitHub Pages copy:
 - Files now sit in folders (`aslgif/`, `asl/`, `ws/`, `pdfjs/`), matching the Claude version. The old loose files and `asl-media.js` were removed.
 - `standalone.js` replaces the old built-in offline code. Anything already saved in a browser carries over.
 
-### Shelly explains words (October 22, 2026)
-- **Ask me** now answers language questions too, like "What does jjim mean in galbijjim?". Shelly (Lumi at night) gives the meaning, then breaks the word or sentence into its parts with what each part means (Korean parts show Hangul and romanization).
-- Like the other Ask me answers, this needs Claude, so it works in the Claude version only.
-
 ### Schedule settings and colors (October 18, 2026)
 - The lesson plans and schedule settings from the Claude version now come with this copy: moved and shifted lessons, swapped games, session times, the ASL pause and custom check-in feelings. Each device keeps any changes made on it. Check-ins, notes, logs and progress records are not copied.
 - This copy starts in the light (sunlit) look instead of following the device's dark mode. More → Light mode / Dark mode still switches it.
