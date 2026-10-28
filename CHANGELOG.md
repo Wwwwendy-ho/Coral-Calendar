@@ -1,5 +1,11 @@
 # Changelog
 
+## Update (October 28, 2026)
+
+Copied from the latest Claude artifact (version 1793219679-7c34).
+- The page and `wsboxes.json` are updated. Pictures and worksheets were already current.
+- The student's real first name is no longer replaced with "Child" in the app.
+
 ## Version 4 (October 17, 2026)
 
 Copied from the latest Claude artifact (coral-v159).
