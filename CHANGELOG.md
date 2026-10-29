@@ -1,5 +1,14 @@
 # Changelog
 
+## 90-minute Low Tide (October 29, 2026)
+
+Copied from the Claude artifact (version 1793312748-cb61).
+- **Low Tide is the default** and is now 1½ hours: Bonding 10, Walk 10, Heart rate up 10, Slime 10, Work 30 (flashcards 6, reading 12, addition 12 with Coral Cove), Handwriting 10, ASL 10. The session ends at 4:50.
+- **Monday to Thursday** from October 30. Earlier Fridays still count, so past worksheets, ASL sets and addition waves stay where they were.
+- **Handwriting sheets** (`ws/hw-1` to `hw-20`): two short sentences from that day's word family story to trace, write and write again. The Handwriting block links to the day's sheet.
+- Days before October 29 keep the old Low Tide plan, so their notes stay on the same blocks.
+- High Tide is unchanged, but its blocks are shortened to fit 90 minutes.
+
 ## Update (October 28, 2026)
 
 Copied from the latest Claude artifact (version 1793219679-7c34).

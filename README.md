@@ -10,10 +10,25 @@ The heart of the app is the **Tide Chart**, the day's schedule. It tells the tut
 
 ## A day at a glance
 
-A full day is about 2½ hours in nine blocks. There are no clock times, because sessions don't always start at the same time.
+Sessions run **Monday to Thursday** from October 30, 2026 (Fridays before that still count). **Low Tide is the default**: 1½ hours, 3:20–4:50, in nine blocks.
 
-| High Tide (regular day) | Minutes | Low Tide (gentler day) | Minutes |
-|---|---|---|---|
+| Low Tide (default) | Minutes |
+|---|---|
+| Bonding | 10 |
+| Walk | 10 |
+| Heart rate up | 10 |
+| Slime | 10 |
+| Work: flashcards | 6 |
+| Work: reading | 12 |
+| Work: addition (Coral Cove) | 12 |
+| Handwriting | 10 |
+| ASL | 10 |
+
+**High Tide** is still the longer day (arrival, flashcards, reading, addition, ASL, active breaks, cleanup and a Mom meeting). Its blocks are shortened to fit the 90-minute session. Low Tide no longer lines up block by block with High Tide, so you switch the whole day between them, not single blocks.
+
+Days before October 29 keep the Low Tide plan they were run with, so their notes stay on the same blocks.
+
+---|---|---|---|
 | Check-in and warm-up | 5 | Calm start | 10 |
 | Flashcards | 25 | Flashcards | 15 |
 | Active break | 10 | Calm break | 15 |
@@ -131,7 +146,7 @@ The moving pictures show where the hand moves, but not changes in handshape. Alw
 | Path | What it is |
 |---|---|
 | `index.html` | The whole app (page, styles and code) |
-| `ws/` | The printable worksheets, each as a PDF and a preview picture: `wf` Word Family, `l1` At the Place, `l3` Reading Comprehension, plus `cc`, `fd`, `hp`, `lh`, `pd`, `sm`, `sea`, `mats` and `ttt` sheets |
+| `ws/` | The printable worksheets, each as a PDF and a preview picture: `wf` Word Family, `l1` At the Place, `l3` Reading Comprehension, plus `cc`, `fd`, `hp`, `hw` (Handwriting), `lh`, `pd`, `sm`, `sea`, `mats` and `ttt` sheets |
 | `wsboxes.json` | Where each word sits on each worksheet, used for tap-to-highlight |
 | `aslgif/` | The 3-second moving pictures for all 99 signs |
 | `asl/` | A still picture for each sign |
@@ -161,7 +176,7 @@ Clearing the browser's site data erases what's saved in it.
 
 ## Good to know
 
-- **Holidays:** the calendar treats every weekday as a school day. Drag lessons around holidays, or leave the day empty.
+- **Holidays:** the calendar treats every Monday to Thursday as a school day. Drag lessons around holidays, or leave the day empty.
 - **Repeating sheets:** the 20 Word Family sheets get used every month, and the comprehension sheets start repeating in November. Adding more sheets pushes those repeats further out.
 - **Sounds:** they only play after the first tap, because browsers require it, and they follow the device's volume and mute switch.
 - **Privacy:** the app and the printed worksheets (`ws/`) show her real first name, and anyone can open them. Keep the site private if that matters.

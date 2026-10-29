@@ -3613,8 +3613,15 @@ function aslAt(setAbs,j){const o=ASL_SLOTS[setAbs];return o&&o[j]!=null?o[j]:(as
 
 /* ---------- State ---------- */
 let plans=JSON.parse(JSON.stringify(DEFAULT_PLANS));
+/* Low Tide became the 90-minute day on LOWV2_FROM. Days before it keep the Low Tide plan they were run with (LOWP0),
+   so their notes, checks and records stay on the same blocks. */
+const LOWV2_FROM="2026-10-29",LOWP0={"name":"Low Tide","note":"The gentler version: same order, fewer demands, and no choices for her to make. You decide everything ahead of time and keep it the same each time.","blocks":[{"id":"b0","title":"Arrival: transition and water fountain","kind":"calm","alt":{"move":"Walk the long way to the fountain.","quiet":"Sit in her quiet spot a little longer before the fountain."},"parts":[{"mins":5,"title":"Transition","text":"About 5 minutes to arrive and settle in: bag away, a quiet hello. No work demands yet."},{"mins":5,"title":"Pick today's music","text":"Ask, “What music today?” Hold up two choices, like Five Creepy Spiders or I Like to Move It, and let her point, say, sign or just look at one. If she doesn't choose, pick one for her; that's fine. Ask once more, the same way, for a calm song for later.","tip":"Write what she picked, and what she skipped, in the note. Her picks carry forward so you can offer them first next time.","choices":["Five Creepy Spiders","I Like to Move It","Her playlist","Calm music","Something new"]},{"mins":0,"title":"Wash hands","text":"Wash hands before the water fountain walk. No timer: move on when she's done."},{"mins":12,"title":"Water fountain walk","text":"Walk together to the water fountain for a drink, then walk back."}]},{"id":"b1","title":"Calm start","kind":"calm","alt":{"move":"Slow march in place for one minute.","quiet":"Sit in her quiet spot while you point through the chart."},"parts":[{"mins":3,"title":"Look at the schedule","text":"Point to each block in order and say what it is. She doesn't need to answer anything."},{"mins":5,"title":"Ring lifts","text":"Face each other with two rings (about 1 foot across) between you. Her right hand and your left hand hold one ring; her left hand and your right hand hold the other. Lift one ring while the other goes down, then switch, slowly, like a seesaw. Same start every Low Tide."}]},{"id":"b2","title":"Flashcards","kind":"learn","auto":"flash","alt":{"move":"Tap each card on the table as you read it to her.","quiet":"You read the cards to her; she just listens. No reading required."},"parts":[{"mins":10,"title":"Known-words round","text":"At the table: 8 of {{today's word cards|cards:today}} she already knows plus 2 new ones. She taps each card as she reads it."},{"mins":5,"title":"Listen and repeat","text":"At the table with your printed phonics flashcards: you read each card clearly and she repeats it. No quizzing."}]},{"id":"b3","title":"Calm break","kind":"calm","alt":{"move":"A slow walk together.","quiet":"Stay in the quiet corner."},"parts":[{"mins":5,"title":"Calming heavy work","text":"You pick one and keep it the same each Low Tide: bounce on an exercise ball, wall push-ups, weighted ball wall rolls, a cuddle ball hug, or a pillow squeeze."},{"mins":5,"title":"Quiet corner","text":"Her usual calm spot and calm item, the same every time. Give a 2-minute warning before it ends."}]},{"id":"b4","title":"Reading comprehension","kind":"learn","auto":"reading","alt":{"move":"Stand at a counter to read.","quiet":"You read the sheet to her in her quiet spot; she listens and points to pictures."},"parts":[{"mins":5,"title":"Word family words","text":"She touches and reads the 5 words on today's word family sheet."},{"mins":12,"title":"Easy sheet together","text":"Use the At the Place sheet below. You read each sentence first, then she reads it. She points to her answer, and you circle it with her."},{"mins":5,"title":"Draw it","text":"She draws the animal or place from the story."}]},{"id":"b5","title":"Snack and outdoor recess","kind":"calm","alt":{"move":"A short walk.","quiet":"Rest in her quiet spot."},"parts":[{"mins":10,"title":"Snack and rest","text":"Snack and water, then a slow walk outside together."}]},{"id":"b6","title":"Addition","kind":"learn","auto":"math","alt":{"move":"Tap the counters as you count them together.","quiet":"You say each fact and its answer; she just listens."},"parts":[{"mins":5,"title":"Build it","text":"With counters or blocks: build the first number, add the second, then count them all together."},{"mins":8,"title":"Fact cards together","text":"Go through {{this week's fact cards|cards:math}} together: you read each fact and its answer, and she says it with you. No quizzing."},{"mins":5,"title":"Three quick cards","text":"Three {{fact cards|cards:math}} at the table. End on one she gets right."}]},{"id":"b7","title":"Calm break","kind":"calm","alt":{"move":"A slow walk together.","quiet":"Stay in the quiet corner."},"parts":[{"mins":5,"title":"Calming heavy work","text":"You pick one and keep it the same each Low Tide: bounce on an exercise ball, wall push-ups, weighted ball wall rolls, a cuddle ball hug, or a pillow squeeze."},{"mins":5,"title":"Quiet corner","text":"Same calm spot and item as the first calm break. Give a 2-minute warning before it ends."}]},{"id":"b8","title":"ASL","kind":"learn","auto":"asl","alt":{"move":"Sign while rocking or marching slowly.","quiet":"Watch the videos together. No copying needed."},"parts":[{"mins":10,"title":"Watch and copy","text":"Watch the video for each of today's five signs together. She copies each one three times."},{"mins":5,"title":"Copy me","text":"You sign each of today's five slowly while saying the word; she copies. No guessing or quizzing."}]},{"id":"b10","title":"Cleanup","kind":"move","alt":{"move":"She carries or pushes the bin of materials to where it's kept while you do the small pieces.","quiet":"She puts away one thing (her cards) while you do the rest."},"parts":[{"mins":10,"title":"Clean up together","text":"Everything goes back where it lives. Give her a short list, one job at a time: cards in the box, balls in the bin, mats rolled up, table wiped. Carrying the bin or pushing the laundry basket of materials to where it's stored is good heavy work to wind down. Count down the last 2 minutes."}]},{"id":"b11","title":"Mom meeting","kind":"calm","alt":{"move":"She does a calm activity nearby (bouncing gently on the exercise ball or a pillow squeeze).","quiet":"She waits in her quiet spot with her calm item."},"parts":[{"mins":10,"title":"Meet with Mom","text":"Ten minutes with Mom at the end: what she worked on in reading, math and ASL, how it went, anything she refused or found hard, and one thing to practice at home. Open the Session recap (at the bottom of the day) and go through it with her."}]}]};
+/* by the day a lesson is held (displayOf), not its lesson key: a lesson moved onto or past the change day gets the new plan */
+function planOf(k,d){return k==="B"&&d&&displayOf(ymd(d))<LOWV2_FROM?LOWP0:plans[k];}
+/* High and Low Tide swap block by block only while their blocks line up one to one. */
+function bothAt(i,d){const a=planOf("A",d).blocks,b=planOf("B",d).blocks;return a.length===b.length&&!!(a[i]&&b[i]);}
 let config={...DEFAULT_CONFIG,...(()=>{try{return JSON.parse(localStorage.getItem("tide-config")||"{}")||{};}catch(e){return {};}})()};
-let planKey=lsGet("tide-plan","A")==="B"?"B":"A";
+let planKey=lsGet("tide-plan2","B")==="A"?"A":"B";
 /* the tide the editor is working on: the shown day's tide (A, B or S), picked when Edit plan opens */
 let editKey=planKey;
 /* Slack Tide: the still water between tides. For a day she can't do any academic work, or maybe any demands at all.
@@ -3675,7 +3682,7 @@ function slackList(d){return d&&ymd(d)<SLACK2_FROM?SLACKP0.blocks:slackCur().blo
 /* a Slack block by id: the list for that day first, then the other version (frozen and logged slots name blocks by id) */
 function slackById(id,d){const f=l=>l.find(x=>x.id===id);return f(slackList(d))||f(slackCur().blocks)||f(SLACKP.blocks)||f(SLACKP0.blocks)||null;}
 /* Slack for just one block: the block keeps its time slot but becomes one calm, no-demand choice from Slack Tide. */
-function slackBlockFor(i,d){const base=plans.A.blocks[i]||plans.B.blocks[i],mins=base.parts.reduce((a,p)=>a+(+p.mins||0),0),pool=slackList(d).filter(x=>!/^(s0|s8|s9)$/.test(x.id)),src=pool[i%pool.length],p=src.parts[0];
+function slackBlockFor(i,d){const base=planOf("A",d).blocks[i]||planOf("B",d).blocks[i],mins=base.parts.reduce((a,p)=>a+(+p.mins||0),0),pool=slackList(d).filter(x=>!/^(s0|s8|s9)$/.test(x.id)),src=pool[i%pool.length],p=src.parts[0];
   return {id:base.id+"s",title:src.title,kind:"calm",cards:src.cards,alts:src.alts,sheets:src.sheets,parts:[{...p,mins}]};}
 function isSlack(d){const r=d&&results[ymd(d)];return !!(r&&r.slack);}
 let ops=[], dmCache=null, schedVers=null, verView=null;
@@ -3689,7 +3696,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function parseYmd(s){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||"");return m?new Date(+m[1],+m[2]-1,+m[3]):null;}
-function isSchool(d){const w=d.getDay();return w>=1&&w<=5;}
+function isSchool(d){const w=d.getDay();return w>=1&&w<=(ymd(d)>="2026-10-30"?4:5);}
 function dayKey(d){return DAYS[d.getDay()-1];}
 function startDate(){const d=new Date();d.setHours(0,0,0,0);for(let i=0;i<21&&!sessionAt(ymd(d));i++)d.setDate(d.getDate()+1);return d;}
 /* ---------- Rescheduling ----------
@@ -3718,11 +3725,11 @@ function schoolDaysBetween(a,b){let n=0;const x=new Date(a);while(x<=b){if(isSch
 /* Sign GIFs: use the bundled copy (asl-media.js, one file) when present, else the aslgif/ folder */
 const ASL_EXTRA_IMG={99:"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20240%20240%22%3E%3Crect%20width%3D%22240%22%20height%3D%22240%22%20fill%3D%22%23fff%22/%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%233b2f5e%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%22120%22%20cy%3D%22108%22%20rx%3D%2252%22%20ry%3D%2264%22%20fill%3D%22%23fde7d6%22/%3E%3Cpath%20d%3D%22M92%20214c4-26%2016-38%2028-38s24%2012%2028%2038%22/%3E%3Ccircle%20cx%3D%22100%22%20cy%3D%22100%22%20r%3D%224%22%20fill%3D%22%233b2f5e%22/%3E%3Ccircle%20cx%3D%22140%22%20cy%3D%22100%22%20r%3D%224%22%20fill%3D%22%233b2f5e%22/%3E%3Cpath%20d%3D%22M104%20136q16%2012%2032%200%22/%3E%3Cellipse%20cx%3D%2266%22%20cy%3D%22110%22%20rx%3D%229%22%20ry%3D%2216%22%20fill%3D%22%23fde7d6%22/%3E%3Cellipse%20cx%3D%22174%22%20cy%3D%22110%22%20rx%3D%229%22%20ry%3D%2216%22%20fill%3D%22%23fde7d6%22/%3E%3Cpath%20d%3D%22M62%2070c-24%208-30%2034-24%2052%204%2014%2016%2020%2026%2016%22%20stroke%3D%22%23e8674f%22%20stroke-width%3D%227%22%20fill%3D%22%23ffd8cc%22/%3E%3Cpath%20d%3D%22M178%2070c24%208%2030%2034%2024%2052-4%2014-16%2020-26%2016%22%20stroke%3D%22%23e8674f%22%20stroke-width%3D%227%22%20fill%3D%22%23ffd8cc%22/%3E%3Cpath%20d%3D%22M40%2060l-10-10M36%2076h-14M200%2060l10-10M204%2076h14%22%20stroke%3D%22%232a78d6%22/%3E%3Cpath%20d%3D%22M68%2050q52-44%20104%200%22%20stroke%3D%22%239aa0b4%22%20stroke-dasharray%3D%226%208%22/%3E%3C/g%3E%3C/svg%3E"};
 function aslSrc(ix){if(ASL_EXTRA_IMG[ix])return ASL_EXTRA_IMG[ix];const m=window.ASLMEDIA;return m&&m[ix]?m[ix]:"aslgif/"+(ix+1)+".gif";}
-function wsName(id){const [t,n]=id.split("-");return t==="wf"?WF[+n-1][0]+" family sheet":t==="l1"?L1[+n-1]:t==="l3"?L3[+n-1][0]:t==="fd"?"Fingers and Dice "+n:t==="cc"?"Count and Circle "+n:t==="pd"?"Play-Doh Take-Away "+n:t==="lh"?"Letter Heights "+n+" ("+WF[+n-1][0]+")":t==="hp"?"Hand page "+n+": "+HPNAME[+n-1]:t==="mats"?"Dot and number floor mats":t==="ttt"?"Tic-tac-toe grids":t==="sm"?"Spiral Steps "+n:t==="sea"?["Sea turtle","Octopus","Whale","Pufferfish","Seahorse"][+n-1]+" coloring page":id;}
+function wsName(id){const [t,n]=id.split("-");return t==="wf"?WF[+n-1][0]+" family sheet":t==="l1"?L1[+n-1]:t==="l3"?L3[+n-1][0]:t==="fd"?"Fingers and Dice "+n:t==="cc"?"Count and Circle "+n:t==="pd"?"Play-Doh Take-Away "+n:t==="lh"?"Letter Heights "+n+" ("+WF[+n-1][0]+")":t==="hw"?"Handwriting "+n+" ("+WF[+n-1][0]+")":t==="hp"?"Hand page "+n+": "+HPNAME[+n-1]:t==="mats"?"Dot and number floor mats":t==="ttt"?"Tic-tac-toe grids":t==="sm"?"Spiral Steps "+n:t==="sea"?["Sea turtle","Octopus","Whale","Pufferfish","Seahorse"][+n-1]+" coloring page":id;}
 /* Number sheets step up every two school days (sheets 1–10); Letter Heights matches the day's word family sheet. */
 /* Number sheets start at sheet 1 on MOTOR_START and step up: the warm-up sheets each time their slot comes round again, Play-Doh weekly. */
 function motorDayIndex(d){const s0=parseYmd((config&&config.motorStart)||MOTOR_START);return d&&s0&&d>=s0?schoolDaysBetween(s0,d)-1:0;}
-function sheetForRaw(prefix,d){const k=schoolDayOfMonth(d);if(!k)return null;if(prefix==="lh"){const r=readingFor(k,d);return r?"lh-"+r.wfNo:null;}
+function sheetForRaw(prefix,d){const k=schoolDayOfMonth(d);if(!k)return null;if(prefix==="lh"||prefix==="hw"){const r=readingFor(k,d);return r?prefix+"-"+r.wfNo:null;}
   const i=motorDayIndex(d),n=["cc","fd","sm"].includes(prefix)?Math.floor(Math.floor(i/2)/3):Math.floor(i/5);return prefix+"-"+(n%10+1);}
 /* Passage text for every worksheet, taken from the sheets themselves. Each row: [kind, first word index on the sheet, words, blanks].
    kind t = title, f = family words, p = paragraph, q = question, c = answer choice. Word indexes match wsboxes.json, so marks made in
@@ -4065,7 +4072,7 @@ function readingFor0(k,d){{const p=pullDay(d||kd);if(p)return readingFor(schoolD
   if(c.comp){const [tp,nn]=c.comp.split("-");o.compId=c.comp;o.comp=tp==="l1"?L1[+nn-1]:L3[+nn-1][0];o.level=tp==="l1"?"Level 1":"Level 3";o.deck=tp==="l3"?L3[+nn-1][1]:null;o.review=false;o.carried.push("comp");}
   if(c.easy){const nn=+c.easy.split("-")[1];o.easyId=c.easy;o.easy=L1[nn-1];o.carried.push("easy");}
   return o;}
-function sheetFor(prefix,d){if(prefix==="lh"||!d)return sheetForRaw(prefix,d);const key=ymd(d),ck="sf|"+prefix+"|"+key;if(ck in ccCache)return ccCache[ck]||sheetForRaw(prefix,d);ccCache[ck]=null;
+function sheetFor(prefix,d){if(prefix==="lh"||prefix==="hw"||!d)return sheetForRaw(prefix,d);const key=ymd(d),ck="sf|"+prefix+"|"+key;if(ck in ccCache)return ccCache[ck]||sheetForRaw(prefix,d);ccCache[ck]=null;
   const pk=prevSession(key),r=pk&&results[pk];if(r&&r.refused&&Object.values(r.refused).some(t=>MOTOR[t]&&MOTOR[t].sheet===prefix))ccCache[ck]=sheetFor(prefix,parseYmd(pk));
   return ccCache[ck]||sheetForRaw(prefix,d);}
 /* Sequence slots: an activity runs at least two sessions, stays up to a week (5 sessions) while she rates it 4–5 stars,
@@ -4145,7 +4152,7 @@ function hm(t,dflt){const m=/^(\d{1,2}):(\d{2})$/.exec(t||"");return m?(+m[1])*6
 let dayTimes=(()=>{try{return JSON.parse(lsGet("tide-daytimes","{}"))||{};}catch(e){return {};}})();
 function dayOv(key){const k=key===undefined?(kd?ymd(kd):null):key;return k?dayTimes[k]||null:null;}
 function startMin(key){const o=dayOv(key);return hm((o&&o.start)||config.startTime,920);}
-function endMin(key){const o=dayOv(key),e=hm((o&&o.end)||config.endTime,1070);return e>startMin(key)+20?e:startMin(key)+150;}
+function endMin(key){const o=dayOv(key),k0=key===undefined?(kd?ymd(kd):""):String(key||""),e=hm((o&&o.end)||(k0&&displayOf(k0)<LOWV2_FROM?"17:50":config.endTime),1070);return e>startMin(key)+20?e:startMin(key)+150;}
 function sessionLen(key){return endMin(key)-startMin(key);}
 async function saveDayTimes(m){dayTimes=m;tsCache={};stCache={};render();if(!db){lsSet("tide-daytimes",JSON.stringify(m));return;}
   try{await db.doc("schedule/daytimes").set({times:JSON.stringify(m),updatedAt:Date.now()});}catch(e){status("That didn't save. Try again.",true);}}
@@ -4190,7 +4197,7 @@ function tideFor(d){if(!d)return planKey;const k=ymd(d),r=results[k];if(r&&(r.ti
    results[lessonKey].frozen = {blocks:[{k, pidx, mins:{slot:minutes}}], E: minutes used}. The rest of the day comes from the new tide,
    picking up from the point in its plan that matches the time already used. */
 function dayBlocks(d){const L=dayBlocks0(d).map(o=>({...o,pidx:o.i})),r=d&&results[ymd(d)],fz=r&&r.frozen;if(!fz||!Array.isArray(fz.blocks)||!fz.blocks.length)return L;
-  const fb=fz.blocks.map((x,j)=>{const src=x.k==="S"?{blocks:slackList(d)}:plans[x.k],fid=String(Object.keys(x.mins||{})[0]||"").split(":")[0],b=x.per?slackBlockFor(x.pidx,d):x.k==="S"?(slackById(fid,d)||src.blocks[x.pidx]):src&&src.blocks[x.pidx];return b?{b,k:x.k,pidx:x.pidx,both:!!(plans.A.blocks[x.pidx]&&plans.B.blocks[x.pidx]),frozen:true,fzIdx:j}:null;}).filter(Boolean);
+  const fb=fz.blocks.map((x,j)=>{const src=x.k==="S"?{blocks:slackList(d)}:planOf(x.k,d),fid=String(Object.keys(x.mins||{})[0]||"").split(":")[0],b=x.per?slackBlockFor(x.pidx,d):x.k==="S"?(slackById(fid,d)||src.blocks[x.pidx]):src&&src.blocks[x.pidx];return b?{b,k:x.k,pidx:x.pidx,both:bothAt(x.pidx,d),frozen:true,fzIdx:j}:null;}).filter(Boolean);
   const ids=new Set(fb.map(o=>o.b.id)),rest=[];let t=0;
   L.forEach(o=>{const m=o.b.parts.reduce((a,p)=>a+(+p.mins||0),0);t+=m;if(ids.has(o.b.id))return;if(m>0&&t<=fz.E)return;rest.push(o);});
   return fb.concat(rest).map((o,i)=>({...o,i}));}
@@ -4198,8 +4205,10 @@ function freezeDone(){if(!kd||!sel||ymd(sel)!==ymd(new Date()))return false;cons
   const m=nowMin(),list=dayBlocks(kd),done=[];for(let i=0;i<T.length&&i<list.length;i++){if(T[i].e<=m)done.push(i);else break;}
   const res=resFor(key);if(!done.length){if(res.frozen){delete res.frozen;return true;}return false;}
   res.frozen={blocks:done.map(i=>{const o=list[i],mins={};o.b.parts.forEach((p,pi)=>{mins[o.b.id+":"+pi]=+resolvePart(o.b,pi,key,dk).mins||0;});return {k:o.k,pidx:o.pidx??o.i,mins,per:o.k==="S"&&!slackById(o.b.id,kd)};}),E:done.reduce((a,i)=>a+(T[i].e-T[i].s),0)};return true;}
-function dayBlocks0(d){if(isSlack(d))return slackList(d).map((b,i)=>({b,k:"S",i,both:false}));const m=mixFor(d),tk=tideFor(d),n=Math.max(plans.A.blocks.length,plans.B.blocks.length),out=[];
-  for(let i=0;i<n;i++){const both=!!(plans.A.blocks[i]&&plans.B.blocks[i]);if(m[i]==="S"&&both){out.push({b:slackBlockFor(i,d),k:"S",i,both});continue;}let k=(m[i]==="S"?tk:m[i])||tk;if(!plans[k].blocks[i])k=k==="A"?"B":"A";out.push({b:plans[k].blocks[i],k,i,both});}
+function dayBlocks0(d){if(isSlack(d))return slackList(d).map((b,i)=>({b,k:"S",i,both:false}));const m=mixFor(d),tk=tideFor(d),Pk={A:planOf("A",d),B:planOf("B",d)};
+  if(Pk.A.blocks.length!==Pk.B.blocks.length)return Pk[tk].blocks.map((b,i)=>({b,k:tk,i,both:false}));
+  const n=Pk.A.blocks.length,out=[];
+  for(let i=0;i<n;i++){const both=!!(Pk.A.blocks[i]&&Pk.B.blocks[i]);if(m[i]==="S"&&both){out.push({b:slackBlockFor(i,d),k:"S",i,both});continue;}let k=(m[i]==="S"?tk:m[i])||tk;if(!Pk[k].blocks[i])k=k==="A"?"B":"A";out.push({b:Pk[k].blocks[i],k,i,both});}
   return out;}
 /* Once a lesson's day has passed, remember which activity each slot had (results.pinT), so later changes to
    ratings, waves or rules never rewrite history. */
@@ -4748,7 +4757,7 @@ function ladderHover(x,y){if(!tl)return;const t=document.elementFromPoint(x,y),r
 function ladderPick(k){if(!tl||!k)return ladderClose();snd("pick");const slot=tl.btn.dataset.tidebtn,fz=tl.btn.dataset.fz;ladderClose();
   if(slot==="day"){const cur=kd?(isSlack(kd)?"S":tideFor(kd)):null;if(k!==cur)setPlan(k);renderDayTide();return;}
   if(fz!==""&&fz!=null&&kd){const key=ymd(kd),res=resFor(key),F=res.frozen&&res.frozen.blocks&&res.frozen.blocks[+fz];
-    if(F){const tot=Object.values(F.mins||{}).reduce((a,v)=>a+(+v||0),0),nb=k==="S"?slackBlockFor(+slot):plans[k].blocks[+slot];
+    if(F){const tot=Object.values(F.mins||{}).reduce((a,v)=>a+(+v||0),0),nb=k==="S"?slackBlockFor(+slot,kd):planOf(k,kd).blocks[+slot];
       if(nb){const raw=nb.parts.map(p=>+p.mins||0),rs=raw.reduce((a,v)=>a+v,0)||1,mins={};let acc=0;nb.parts.forEach((p,pi)=>{const v=pi===nb.parts.length-1?Math.max(0,tot-acc):Math.round(raw[pi]/rs*tot);acc+=v;mins[nb.id+":"+pi]=v;});
         res.frozen.blocks[+fz]={k,pidx:+slot,mins,per:k==="S"};saveResult(key);render();return;}}}const m={...mixFor(kd)};if(k===tideFor(kd))delete m[slot];else m[slot]=k;saveMix(kd,m);render();}
 function ladderClose(now){if(!tl)return;const t=tl;tl=null;t.btn.classList.remove("open");if(now){t.el.remove();return;}t.el.classList.add("closing");setTimeout(()=>t.el.remove(),180);}
@@ -4943,7 +4952,7 @@ function renderHerList(){const el=document.getElementById("timeline"),list=dayBl
       <div class="hlbody"><span class="hltime">${(()=>{const a=hlT;hlT+=dayBlockMins(b);return clock(a);})()}</span>${isNow?'<span class="hlnowtag">Now</span>':isDone?'<span class="hldonetag">✓ Done</span>':""}<h3>${esc(b.title)}</h3>
       <ul class="hltasks">${parts.map((p,ti)=>{const sl=b.id+":"+p.pi,on=!!((results[key]||{}).herChk||{})[sl];return `<li class="hltask${on?" on":""}"><button type="button" class="hlchk" data-hlchk="${sl}" data-ti="${ti}" aria-pressed="${on}" aria-label="${esc(p.title)}${on?", done":""}">${on?"✓":""}</button><span>${esc(p.title)}</span></li>`;}).join("")}</ul></div></li>`;}).join("");}
 function renderTimeline(){setTimeout(placeAnchor,0);if(herList&&!editing){renderHerList();return;}
-  const plan=editing?draft:plans[tideFor(kd)], dk=dayKey(kd), done=doneSet();
+  const plan=editing?draft:planOf(tideFor(kd),kd), dk=dayKey(kd), done=doneSet();
   let t=startMin();
   const el=document.getElementById("timeline");
   if(editing){el.innerHTML=plan.blocks.map((b,bi)=>{const s=t;t+=blockMins(b);return editBlock(b,bi,s,dk);}).join("")+`<li class="step"><div></div><div><button class="btn" type="button" data-act="addBlock">Add a block</button></div></li>`;wireEdit();return;}
@@ -4973,7 +4982,7 @@ function renderTimeline(){setTimeout(placeAnchor,0);if(herList&&!editing){render
 }
 function renderHead(){
   const k=schoolDayOfMonth(kd), list=editing?draft.blocks.map((b,i)=>({b,k:editKey,i})):dayBlocks(kd);
-  const slack=!editing&&list.length>0&&list.every(o=>o.k==="S"),nA=list.filter(o=>o.k==="A").length,nB=slack?0:list.length-nA, uni=editing?draft:slack?slackCur():nB===0?plans.A:nA===0?plans.B:null;
+  const slack=!editing&&list.length>0&&list.every(o=>o.k==="S"),nA=list.filter(o=>o.k==="A").length,nB=slack?0:list.length-nA, uni=editing?draft:slack?slackCur():nB===0?planOf("A",kd):nA===0?planOf("B",kd):null;
   const plan={name:uni?uni.name:`Mixed: ${nA} ${plans.A.name}, ${nB} ${plans.B.name}`,note:uni?uni.note:"Each block shows its own High or Low setting.",blocks:list.map(o=>o.b)};
   document.getElementById("dateTitle").textContent=sel.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   const total=plan.blocks.reduce((a,b)=>a+blockMins(b),0);
@@ -5076,7 +5085,7 @@ document.getElementById("calBtn").onclick=()=>{const c=document.getElementById("
 document.getElementById("calPrev").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);renderCal();};
 document.getElementById("calNext").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);renderCal();};
 function setPlan(k){if(editing&&!confirmLeave())return;{const ch=freezeDone();if(ch&&kd)saveResult(ymd(kd));tsCache={};stCache={};}if(k==="S"){if(!kd){status("There's no lesson on this day.",true);return;}const key=ymd(kd),res=resFor(key);res.slack=true;saveResult(key);status("Slack Tide today: no academic work and no demands.");render();return;}
-  if(kd){const key=ymd(kd),res=resFor(key);delete res.slack;res.tide=k;saveResult(key);}else{planKey=k;lsSet("tide-plan",k);}if(kd)saveMix(kd,{});render();}
+  if(kd){const key=ymd(kd),res=resFor(key);delete res.slack;res.tide=k;saveResult(key);}else{planKey=k;lsSet("tide-plan2",k);}if(kd)saveMix(kd,{});render();}
 document.getElementById("planA").onclick=()=>setPlan("A");
 document.getElementById("planB").onclick=()=>setPlan("B");
 document.getElementById("planS").onclick=()=>setPlan("S");
@@ -5777,7 +5786,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementB
 /* ---------- Worksheet bank folders ---------- */
 let curFolder="wf";
 const FOLDERS={wf:{name:"Word Family",n:()=>WF.length,label:i=>WF[i][0]+" · "+WF[i][1]},l1:{name:"At the Place",n:()=>L1.length,label:i=>L1[i]},l3:{name:"Reading Comprehension",n:()=>L3.length,label:i=>L3[i][0]},
- lh:{name:"Letter Heights",n:()=>20,label:i=>WF[i][0]+" words"},fd:{name:"Fingers and Dice",n:()=>10,label:i=>"Sheet "+(i+1)},cc:{name:"Count and Circle",n:()=>10,label:i=>"Sheet "+(i+1)},
+ lh:{name:"Letter Heights",n:()=>20,label:i=>WF[i][0]+" words"},hw:{name:"Handwriting",n:()=>20,label:i=>WF[i][0]+" sentences"},fd:{name:"Fingers and Dice",n:()=>10,label:i=>"Sheet "+(i+1)},cc:{name:"Count and Circle",n:()=>10,label:i=>"Sheet "+(i+1)},
  pd:{name:"Play-Doh Take-Away",n:()=>10,label:i=>"Sheet "+(i+1)},hp:{name:"Hand Positions",n:()=>8,label:i=>HPNAME[i]},sm:{name:"Spiral Steps",n:()=>10,label:i=>"Sheet "+(i+1)},mats:{name:"Floor mats",n:()=>1,label:i=>"Dots and numbers 1–10 (20 pages)"}};
 function usageThisMonth(){const d0=kd||sel,y=d0.getFullYear(),m=d0.getMonth(),len=new Date(y,m+1,0).getDate(),use={};
   for(let i=1;i<=len;i++){const d=new Date(y,m,i),k=schoolDayOfMonth(d);if(!k)continue;const r=readingFor(k,d);
@@ -5849,7 +5858,7 @@ function logFixed(key){return {student:"Alissa",session:sessionNo(key)};}
 /* Trials for a session: every question on the day's worksheets, every card in the day's card sets, and every academic task
    (the non-movement steps of the reading, flashcard, addition and ASL blocks). */
 /* Items on the hand and number sheets (rows, problems, numbers, words), counted from the sheets themselves. */
-const SHEET_ITEMS={"fd-1":8,"cc-1":6,"sm-1":7,"pd-1":6,"fd-2":10,"cc-2":6,"sm-2":13,"pd-2":6,"fd-3":10,"cc-3":7,"sm-3":12,"pd-3":6,"fd-4":10,"cc-4":7,"sm-4":11,"pd-4":6,"fd-5":10,"cc-5":8,"sm-5":7,"pd-5":6,"fd-6":10,"cc-6":8,"sm-6":12,"pd-6":6,"fd-7":12,"cc-7":9,"sm-7":13,"pd-7":6,"fd-8":12,"cc-8":9,"sm-8":11,"pd-8":6,"fd-9":12,"cc-9":10,"sm-9":15,"pd-9":6,"fd-10":12,"cc-10":10,"sm-10":11,"pd-10":6,"lh-1":5,"lh-2":5,"lh-3":5,"lh-4":5,"lh-5":5,"lh-6":5,"lh-7":5,"lh-8":5,"lh-9":5,"lh-10":5,"lh-11":5,"lh-12":5,"lh-13":5,"lh-14":5,"lh-15":5,"lh-16":5,"lh-17":5,"lh-18":5,"lh-19":5,"lh-20":5};
+const SHEET_ITEMS={"fd-1":8,"cc-1":6,"sm-1":7,"pd-1":6,"fd-2":10,"cc-2":6,"sm-2":13,"pd-2":6,"fd-3":10,"cc-3":7,"sm-3":12,"pd-3":6,"fd-4":10,"cc-4":7,"sm-4":11,"pd-4":6,"fd-5":10,"cc-5":8,"sm-5":7,"pd-5":6,"fd-6":10,"cc-6":8,"sm-6":12,"pd-6":6,"fd-7":12,"cc-7":9,"sm-7":13,"pd-7":6,"fd-8":12,"cc-8":9,"sm-8":11,"pd-8":6,"fd-9":12,"cc-9":10,"sm-9":15,"pd-9":6,"fd-10":12,"cc-10":10,"sm-10":11,"pd-10":6,"lh-1":5,"lh-2":5,"lh-3":5,"lh-4":5,"lh-5":5,"lh-6":5,"lh-7":5,"lh-8":5,"lh-9":5,"lh-10":5,"lh-11":5,"lh-12":5,"lh-13":5,"lh-14":5,"lh-15":5,"lh-16":5,"lh-17":5,"lh-18":5,"lh-19":5,"lh-20":5,"hw-1":2,"hw-2":2,"hw-3":2,"hw-4":2,"hw-5":2,"hw-6":2,"hw-7":2,"hw-8":2,"hw-9":2,"hw-10":2,"hw-11":2,"hw-12":2,"hw-13":2,"hw-14":2,"hw-15":2,"hw-16":2,"hw-17":2,"hw-18":2,"hw-19":2,"hw-20":2};
 function dayTrials(d){const keep=kd;try{kd=d;const list=dayBlocks(d),key=ymd(d),dk=dayKey(d);
   const q=dayWorksheets(list).reduce((a,id)=>a+(PASSAGE[id]?PASSAGE[id].filter(r=>r[0]==="q").length:(SHEET_ITEMS[id]||0)),0);
   const c=daySets(list).filter(st=>st.title!=="Answer letters").reduce((a,st)=>a+st.cards.length,0); /* answer letters are props, not trials */
@@ -5863,7 +5872,7 @@ function goalActivity(f,G){const key=ymd(f.d),dk=dayKey(f.d);let blk=null;try{bl
   const low=blk&&blk.k==="B";
   const what=G.auto==="reading"?`${f.r.wf[0]} word family (${f.r.wf[1]}) and ${low?f.r.easy:f.r.comp}`:G.auto==="math"?(f.w?f.w.label:"Addition"):(f.a?"Signs: "+f.a.win.map(i=>ASL[i][0]).join(", "):"ASL signs");
   return what+(games.length?". "+games.join(", "):"");}
-function goalSlack(key,G){const d=parseYmd(key);if(!d)return false;if(isSlack(d))return true;const i=[plans.A,plans.B].map(p=>p.blocks.findIndex(b=>b.auto===G.auto)).find(x=>x>=0);if(i==null||i<0)return false;try{const o=dayBlocks(d).find(o=>o.i===i);return !!(o&&o.k==="S");}catch(e){return false;}}
+function goalSlack(key,G){const d=parseYmd(key);if(!d)return false;if(isSlack(d))return true;const i=[planOf("A",d),planOf("B",d)].map(p=>p.blocks.findIndex(b=>b.auto===G.auto)).find(x=>x>=0);if(i==null||i<0)return false;try{const o=dayBlocks(d).find(o=>o.i===i);return !!(o&&o.k==="S");}catch(e){return false;}}
 function slackTitles(d){const out=new Set();if(!d)return out;try{const key=ymd(d),dk=dayKey(d);dayBlocks(d).forEach(o=>{if(o.k!=="S")return;o.b.parts.forEach((p,pi)=>out.add(resolvePart(o.b,pi,key,dk).title));});}catch(e){}return out;}
 function goalAuto(key){const f=logFacts(key),o={};GOALS.forEach((G,gi)=>{const g=gi+1;o[`g${g}skill`]=G.skill;o[`g${g}area`]=[G.area];o[`g${g}act`]=goalActivity(f,G);});return o;}
 /* ---------- Session notes: a few short pages of buttons ----------
@@ -6844,7 +6853,7 @@ const SH_FLAGS={itchy:"itchy or uncomfortable",tired:"tired",school:"hard day at
 const SH_AREA={flash:"flashcards",reading:"reading",math:"math",asl:"ASL",move:"movement",learn:"learning",calm:"calm time",other:"other tasks"};
 const SH_TIDE_TIP={B:"Low Tide keeps the same order with fewer, easier asks.",S:"Slack Tide drops the academic asks. If she settles, switch the rest of the day to Low Tide with the Tide level button."};
 function shNum(v){if(v==null||v==="")return null;if(typeof v==="number")return v;const s=String(v);if(/none/i.test(s))return 0;if(/3\+/.test(s))return 3;if(/1.2/.test(s))return 1.5;const n=parseFloat(s);return isNaN(n)?null:n;}
-function shArea(slot){const bid=String(slot).split(":")[0];const b=[...((plans.A&&plans.A.blocks)||[]),...((plans.B&&plans.B.blocks)||[]),...slackCur().blocks,...SLACKP.blocks,...SLACKP0.blocks].find(x=>x.id===bid);return b?(b.auto||b.kind||"other"):"other";}
+function shArea(slot){const bid=String(slot).split(":")[0];const b=[...((plans.A&&plans.A.blocks)||[]),...((plans.B&&plans.B.blocks)||[]),...LOWP0.blocks,...slackCur().blocks,...SLACKP.blocks,...SLACKP0.blocks].find(x=>x.id===bid);return b?(b.auto||b.kind||"other"):"other";}
 /* The last n sessions before a day (by the date they happened), newest first */
 function shKeys(n,before){const lim=before||SH_TODAY();return [...new Set([...Object.keys(results),...Object.keys(logs)])].filter(k=>{if(!parseYmd(k))return false;const d=displayOf(k);if(d>=lim||sessionAt(d)!==k)return false;const r=results[k]||{};return !!(logs[k]||behTotals(r).any||(r.refused&&Object.keys(r.refused).length));}).sort((a,b)=>displayOf(a)<displayOf(b)?1:-1).slice(0,n);}
 function shRow(k){const res=results[k]||{},L=(logs[k]&&logs[k].a)||{},t=behTotals(res),R=rcRow(k)||{},lg=id=>shNum(L[id]);
@@ -7412,7 +7421,7 @@ function shBlkCounts(key,bid){const r=results[key]||{},m=((r.beh||{})[bid])||{};
 function shNgTarget(key,i){const d=parseYmd(key),T=blkTimes(key),L=dayBlocks(d),m=nowMin();
   for(let j=i+1;j<L.length&&j<T.length;j++){const o=L[j];if(o.frozen||T[j].s<m-.5||o.b.kind!=="learn")continue;
     if(o.k==="S")return null;const ov=(results[key]||{}).over||{};if(ov[o.b.id+":0"]&&ov[o.b.id+":0"].title==="Calm break")return null;
-    return {o,s:T[j].s,kind:o.k==="A"&&plans.B&&plans.B.blocks[o.pidx]&&!isSlack(d)?"low":"calm"};}return null;}
+    return {o,s:T[j].s,kind:o.k==="A"&&bothAt(o.pidx,d)&&!isSlack(d)?"low":"calm"};}return null;}
 function shNgLow(key,o){const d=parseYmd(key),m={...mixFor(d)},prev={...m};if(tideFor(d)==="B")delete m[o.pidx];else m[o.pidx]="B";saveMix(d,m);return ()=>saveMix(d,prev);}
 function shNgCalm(key,o){const d=parseYmd(key),dk=dayKey(d),res=resFor(key),prev=res.over?JSON.parse(JSON.stringify(res.over)):null;res.over=res.over||{};
   const cs=o.b.parts.map((p,pi)=>resolvePart(o.b,pi,key,dk)),tot=cs.reduce((a,c)=>a+(+c.mins||0),0);
