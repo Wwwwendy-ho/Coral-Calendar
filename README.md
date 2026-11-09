@@ -1,6 +1,6 @@
 # Child's Move & Learn Plan
 
-A daily tutoring planner built for Child. She's 12, autistic, and working at about a first-grade level. Every day runs the same four lessons in the same order, with movement built into each one:
+A daily tutoring planner built for a student I teach. She's 12, autistic, and working at about a first-grade level. Every day runs the same four lessons in the same order, with movement built into each one:
 
 **Flashcards → Reading comprehension → Addition → ASL**
 
